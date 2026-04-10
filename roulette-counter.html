@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Roulette Counter</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red: #c0392b;
+  --blk: #1a1a1a;
+  --grn: #1a7a3c;
+  --gold: #e8a020;
+  --bg: #0f0f0f;
+  --bg2: #1c1c1e;
+  --bg3: #2a2a2d;
+  --border: #3a3a3e;
+  --txt: #f0f0f0;
+  --txt2: #a0a0a8;
+  --txt3: #606068;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--txt);
+  font-family: 'DM Sans', sans-serif;
+  overflow: hidden;
+}
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* TABS */
+.tabs {
+  display: flex;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.tab {
+  flex: 1;
+  padding: 14px 8px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--txt3);
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+.tab:hover:not(.active) { color: var(--txt2); }
+
+.panel { display: none; flex: 1; min-height: 0; overflow-y: auto; }
+.panel.active { display: flex; flex-direction: column; }
+
+/* ── ENTRY TAB ── */
+.entry-inner {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 10px 6px;
+  gap: 8px;
+}
+
+/* Zero button */
+.zero-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  flex-shrink: 0;
+}
+.zero-btn {
+  height: 52px;
+  border-radius: 10px;
+  background: var(--grn);
+  color: #fff;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: 0.06em;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: transform 0.1s, border-color 0.1s;
+}
+.zero-btn.selected { border-color: var(--gold); transform: scale(1.04); }
+.zero-btn:active { transform: scale(0.97); }
+
+/* Dozen blocks container */
+.dozens-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.dozen-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dozen-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.1em;
+  color: var(--txt3);
+  text-align: center;
+  padding: 2px 0 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2px;
+}
+
+/* 4 columns × 3 rows grid, numbers go bottom-to-top per column */
+.dozen-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.num-btn {
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 0.04em;
+  font-weight: 400;
+  transition: transform 0.1s, border-color 0.12s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2.5px solid transparent;
+  width: 100%;
+  aspect-ratio: 1.3;
+  padding: 0;
+}
+.num-btn.red { background: var(--red); color: #fff; }
+.num-btn.blk { background: #2a2a2a; color: #fff; border-color: #484848; }
+.num-btn.selected { border-color: var(--gold) !important; transform: scale(1.08); }
+.num-btn:active { transform: scale(0.93); }
+
+/* Sel display + confirm */
+.sel-confirm {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 4px 0 2px;
+}
+.sel-display {
+  text-align: center;
+  font-size: 15px;
+  font-weight: 500;
+  min-height: 24px;
+  color: var(--txt2);
+}
+.sel-display .sel-num { color: var(--txt); font-size: 17px; font-weight: 600; }
+.ok-btn {
+  width: 100%;
+  padding: 16px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 26px;
+  letter-spacing: 0.1em;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  background: var(--gold);
+  color: #0f0f0f;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.ok-btn:disabled { background: var(--bg3); color: var(--txt3); cursor: not-allowed; }
+.ok-btn:not(:disabled):active { transform: scale(0.98); opacity: 0.9; }
+
+/* History */
+.history-section {
+  flex-shrink: 0;
+  padding: 2px 0 4px;
+}
+.section-label {
+  font-size: 11px;
+  color: var(--txt3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 7px;
+}
+.count-badge {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 7px;
+  font-size: 11px;
+  color: var(--txt2);
+  display: inline-block;
+  margin-left: 5px;
+}
+.history-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 5px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.hist-chip {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.hist-chip.red { background: var(--red); color: #fff; }
+.hist-chip.blk { background: #2a2a2a; color: #fff; outline: 1px solid #555; }
+.hist-chip.grn { background: var(--grn); color: #fff; }
+
+/* ── STATS TAB ── */
+.stats-inner {
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.stat-card {
+  background: var(--bg2);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.stat-card-title {
+  font-size: 11px;
+  color: var(--txt3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
+}
+.stat-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.stat-row:last-child { margin-bottom: 0; }
+.stat-label { font-size: 13px; min-width: 52px; color: var(--txt2); font-weight: 500; }
+.bar-wrap { flex: 1; height: 10px; background: var(--bg3); border-radius: 5px; overflow: hidden; }
+.bar { height: 100%; border-radius: 5px; transition: width 0.4s; }
+.bar.red { background: var(--red); } .bar.blk { background: #666; }
+.stat-val { font-size: 13px; font-weight: 600; min-width: 60px; text-align: right; color: var(--txt); }
+.dozen-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.dz-card { background: var(--bg2); border-radius: 10px; padding: 12px 8px; text-align: center; }
+.dz-card-label { font-size: 11px; color: var(--txt3); margin-bottom: 5px; letter-spacing: 0.05em; }
+.dz-card-val { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--txt); line-height: 1; }
+.dz-card-pct { font-size: 12px; color: var(--txt2); margin-top: 3px; }
+.freq-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.freq-table th { text-align: left; font-weight: 500; font-size: 11px; color: var(--txt3); padding: 4px 6px; border-bottom: 1px solid var(--border); letter-spacing: 0.05em; text-transform: uppercase; }
+.freq-table td { padding: 7px 6px; border-bottom: 0.5px solid var(--bg3); }
+.freq-table tr:last-child td { border-bottom: none; }
+.chip-sm { width: 26px; height: 26px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 13px; vertical-align: middle; }
+.chip-sm.red { background: var(--red); color: #fff; }
+.chip-sm.blk { background: #2a2a2a; color: #fff; outline: 1px solid #555; }
+.chip-sm.grn { background: var(--grn); color: #fff; }
+.empty-msg { color: var(--txt2); font-size: 15px; text-align: center; padding: 3rem 0; }
+
+/* ── PLAY TAB ── */
+.play-inner {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px 12px;
+  gap: 10px;
+  flex: 1;
+}
+.play-block {
+  background: var(--bg2);
+  border-radius: 14px;
+  padding: 14px 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.play-block-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--txt3);
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+.play-color-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  letter-spacing: 0.06em;
+  width: 100%;
+  justify-content: center;
+}
+.play-color-badge.red { background: var(--red); color: #fff; }
+.play-color-badge.blk { background: #2a2a2a; color: #fff; border: 1px solid #444; }
+.play-no-signal {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  color: var(--txt3);
+  letter-spacing: 0.1em;
+}
+.play-dozen-badge {
+  display: block;
+  padding: 14px 20px;
+  border-radius: 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  letter-spacing: 0.06em;
+  color: var(--txt);
+  text-align: center;
+  width: 100%;
+}
+.play-nums {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-start;
+}
+.play-num-chip {
+  width: 42px;
+  height: 42px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.play-num-chip.red { background: var(--red); color: #fff; }
+.play-num-chip.blk { background: #2a2a2a; color: #fff; outline: 1px solid #555; }
+.play-num-chip.grn { background: var(--grn); color: #fff; }
+.play-empty {
+  font-size: 16px;
+  color: var(--txt2);
+  text-align: center;
+  margin: auto;
+  padding: 2rem 0;
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('entry')">Entry</button>
+    <button class="tab" onclick="switchTab('stats')">Stats</button>
+    <button class="tab" onclick="switchTab('play')">Play</button>
+  </div>
+
+  <!-- ENTRY -->
+  <div id="panel-entry" class="panel active">
+    <div class="entry-inner">
+
+      <div class="zero-row">
+        <button class="zero-btn" id="btn-0" onclick="selectNum(0)">0 — ZÉRO</button>
+      </div>
+
+      <div class="dozens-container" id="dozens-container">
+        <!-- built by JS -->
+      </div>
+
+      <div class="sel-confirm">
+        <div class="sel-display" id="sel-display">
+          <span style="color:var(--txt3)">Aucun numéro sélectionné</span>
+        </div>
+        <button class="ok-btn" id="ok-btn" disabled onclick="submitTurn()">✓ Confirmer</button>
+      </div>
+
+      <div class="history-section">
+        <div class="section-label">Derniers tours <span class="count-badge" id="history-count">0</span></div>
+        <div class="history-row" id="history-row">
+          <span style="color:var(--txt3);font-size:13px">Aucun tour</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div id="panel-stats" class="panel">
+    <div class="stats-inner" id="stats-content"></div>
+  </div>
+
+  <!-- PLAY -->
+  <div id="panel-play" class="panel">
+    <div class="play-inner" id="play-content"></div>
+  </div>
+</div>
+
+<script>
+const RED_NUMS = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+const turns = [];
+let selected = null;
+
+function colorClass(n){ if(n===0)return 'grn'; return RED_NUMS.has(n)?'red':'blk'; }
+function colorLabel(n){ if(n===0)return 'Zéro'; return RED_NUMS.has(n)?'Rouge':'Noir'; }
+
+/*
+  Layout per dozen: 4 columns × 3 rows
+  Numbers increment bottom-to-top within each column, left to right.
+
+  Dozen 1–12:
+    Col1: 3(top),2,1(bot)  Col2: 6,5,4  Col3: 9,8,7  Col4: 12,11,10
+  Dozen 13–24:
+    Col1: 15,14,13  Col2: 18,17,16  Col3: 21,20,19  Col4: 24,23,22
+  Dozen 25–36:
+    Col1: 27,26,25  Col2: 30,29,28  Col3: 33,32,31  Col4: 36,35,34
+
+  CSS grid fills left-to-right, top-to-bottom by default, so we pass nums
+  in that order: top-row first (highest of each col), then mid, then bottom.
+*/
+function buildGrid(){
+  const container = document.getElementById('dozens-container');
+  const dozens = [
+    { label:'1 – 12',  start: 1  },
+    { label:'13 – 24', start: 13 },
+    { label:'25 – 36', start: 25 },
+  ];
+
+  dozens.forEach(dz => {
+    const s = dz.start;
+    // 4 columns, each 3 tall. Column k (0-indexed) has nums: s+k*3, s+k*3+1, s+k*3+2
+    // Within column, top=highest, bottom=lowest → top = s+k*3+2, mid = s+k*3+1, bot = s+k*3
+    // Grid order (row-major): all col-tops first, then all col-mids, then all col-bots
+    const rows = [[], [], []]; // row0=top, row1=mid, row2=bot
+    for(let col = 0; col < 4; col++){
+      rows[0].push(s + col*3 + 2); // top (largest)
+      rows[1].push(s + col*3 + 1);
+      rows[2].push(s + col*3 + 0); // bottom (smallest)
+    }
+    const numsInOrder = [...rows[0], ...rows[1], ...rows[2]];
+
+    const block = document.createElement('div');
+    block.className = 'dozen-block';
+
+    const label = document.createElement('div');
+    label.className = 'dozen-label';
+    label.textContent = dz.label;
+    block.appendChild(label);
+
+    const grid = document.createElement('div');
+    grid.className = 'dozen-grid';
+
+    numsInOrder.forEach(n => {
+      const btn = document.createElement('button');
+      btn.className = 'num-btn ' + colorClass(n);
+      btn.textContent = n;
+      btn.id = 'btn-' + n;
+      btn.onclick = () => selectNum(n);
+      grid.appendChild(btn);
+    });
+
+    block.appendChild(grid);
+    container.appendChild(block);
+  });
+}
+
+function selectNum(n){
+  if(selected !== null){ const p=document.getElementById('btn-'+selected); if(p)p.classList.remove('selected'); }
+  selected = n;
+  document.getElementById('btn-'+n).classList.add('selected');
+  const bg = n===0 ? 'var(--grn)' : RED_NUMS.has(n) ? 'var(--red)' : '#2a2a2a';
+  document.getElementById('sel-display').innerHTML =
+    `<span style="display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:middle;background:${bg}"></span>Sélectionné : <span class="sel-num">${n}</span> — ${colorLabel(n)}`;
+  document.getElementById('ok-btn').disabled = false;
+}
+
+function submitTurn(){
+  if(selected === null) return;
+  turns.push(selected);
+  document.getElementById('btn-'+selected).classList.remove('selected');
+  selected = null;
+  document.getElementById('sel-display').innerHTML = '<span style="color:var(--txt3)">Aucun numéro sélectionné</span>';
+  document.getElementById('ok-btn').disabled = true;
+  updateHistory();
+}
+
+function updateHistory(){
+  const row = document.getElementById('history-row');
+  document.getElementById('history-count').textContent = turns.length;
+  if(!turns.length){ row.innerHTML='<span style="color:var(--txt3);font-size:13px">Aucun tour</span>'; return; }
+  row.innerHTML = [...turns].reverse().slice(0,30).map(n=>`<div class="hist-chip ${colorClass(n)}">${n}</div>`).join('');
+}
+
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['entry','stats','play'][i]===tab));
+  ['entry','stats','play'].forEach(p=>document.getElementById('panel-'+p).classList.toggle('active',p===tab));
+  if(tab==='stats') renderStats();
+  if(tab==='play') renderPlay();
+}
+
+function renderPlay(){
+  const el = document.getElementById('play-content');
+  if(!turns.length){
+    el.innerHTML='<div class="play-empty">Aucun tour enregistré.<br><br>Allez dans Entry et soumettez des numéros.</div>';
+    return;
+  }
+  const last15 = turns.slice(-15);
+  const last60 = turns.slice(-60);
+
+  const colored15 = last15.filter(n=>n!==0);
+  const reds = colored15.filter(n=>RED_NUMS.has(n)).length;
+  const blks = colored15.length - reds;
+  let colorHTML;
+  if(reds===blks) colorHTML = `<span class="play-no-signal">— PAS DE SIGNAL —</span>`;
+  else if(reds>blks) colorHTML = `<span class="play-color-badge red">🔴 Rouge</span>`;
+  else colorHTML = `<span class="play-color-badge blk">⚫ Noir</span>`;
+
+  const dz=[0,0,0];
+  last15.forEach(n=>{if(n>=1&&n<=12)dz[0]++;else if(n>=13&&n<=24)dz[1]++;else if(n>=25&&n<=36)dz[2]++;});
+  const maxDz=Math.max(...dz);
+  const topDzCount=dz.filter(v=>v===maxDz).length;
+  let dozenHTML;
+  if(maxDz===0||topDzCount>1) dozenHTML=`<span class="play-no-signal">— PAS DE SIGNAL —</span>`;
+  else {
+    const dzIdx=dz.indexOf(maxDz);
+    const dzNames=['1 – 12','13 – 24','25 – 36'];
+    dozenHTML=`<span class="play-dozen-badge">${dzNames[dzIdx]}</span>`;
+  }
+
+  const freq={};
+  last60.forEach(n=>freq[n]=(freq[n]||0)+1);
+  const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]);
+  const top15=sorted.slice(0,15).map(([n])=>Number(n)).sort((a,b)=>a-b);
+  const numsHTML = top15.length
+    ? top15.map(n=>`<div class="play-num-chip ${colorClass(n)}">${n}</div>`).join('')
+    : `<span class="play-no-signal">Pas assez de données</span>`;
+
+  el.innerHTML = `
+    <div class="play-block">
+      <div class="play-block-title">Couleur — ${colored15.length} derniers tours (sans 0)</div>
+      ${colorHTML}
+    </div>
+    <div class="play-block">
+      <div class="play-block-title">Douzaine — ${last15.length} derniers tours</div>
+      ${dozenHTML}
+    </div>
+    <div class="play-block" style="flex:1.4">
+      <div class="play-block-title">Numéros chauds — ${Math.min(turns.length,60)} derniers tours</div>
+      <div class="play-nums">${numsHTML}</div>
+    </div>
+  `;
+}
+
+function renderStats(){
+  const el = document.getElementById('stats-content');
+  if(!turns.length){ el.innerHTML='<div class="empty-msg">Aucun tour enregistré.<br>Allez dans Entry.</div>'; return; }
+  const last15=turns.slice(-15);
+  const last60=turns.slice(-60);
+  const colored15=last15.filter(n=>n!==0);
+  const reds15=colored15.filter(n=>RED_NUMS.has(n)).length;
+  const blks15=colored15.length-reds15;
+  const tot=colored15.length||1;
+  const redPct=Math.round(reds15/tot*100);
+  const blkPct=Math.round(blks15/tot*100);
+  const dz=[0,0,0];
+  last15.forEach(n=>{if(n>=1&&n<=12)dz[0]++;else if(n>=13&&n<=24)dz[1]++;else if(n>=25&&n<=36)dz[2]++;});
+  const dzTot=dz.reduce((a,b)=>a+b,0)||1;
+  const freq={};
+  last60.forEach(n=>freq[n]=(freq[n]||0)+1);
+  const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,15);
+
+  el.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-card-title">Couleurs — ${last15.length} derniers tours (0 exclu)</div>
+      <div class="stat-row">
+        <span class="stat-label" style="color:#e05050">Rouge</span>
+        <div class="bar-wrap"><div class="bar red" style="width:${redPct}%"></div></div>
+        <span class="stat-val">${reds15} · ${redPct}%</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label" style="color:#aaa">Noir</span>
+        <div class="bar-wrap"><div class="bar blk" style="width:${blkPct}%"></div></div>
+        <span class="stat-val">${blks15} · ${blkPct}%</span>
+      </div>
+    </div>
+    <div>
+      <div class="section-label" style="margin-bottom:8px">Douzaines — ${last15.length} derniers tours</div>
+      <div class="dozen-cards">
+        ${['1–12','13–24','25–36'].map((label,i)=>`
+          <div class="dz-card">
+            <div class="dz-card-label">${label}</div>
+            <div class="dz-card-val">${dz[i]}</div>
+            <div class="dz-card-pct">${Math.round(dz[i]/dzTot*100)}%</div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div>
+      <div class="section-label" style="margin-bottom:8px">Top 15 numéros — ${Math.min(turns.length,60)} derniers tours</div>
+      ${!sorted.length?'<div class="empty-msg">Pas assez de données</div>':`
+      <table class="freq-table">
+        <thead><tr><th>Rang</th><th>N°</th><th>Hits</th><th>Fréq.</th></tr></thead>
+        <tbody>${sorted.map(([n,count],i)=>{
+          const pct=Math.round(count/last60.length*100);
+          return `<tr>
+            <td style="color:var(--txt3)">#${i+1}</td>
+            <td><span class="chip-sm ${colorClass(Number(n))}">${n}</span></td>
+            <td style="font-weight:600">${count}</td>
+            <td style="color:var(--txt2)">${pct}%</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>`}
+    </div>
+  `;
+}
+
+buildGrid();
+updateHistory();
+</script>
+</body>
+</html>
