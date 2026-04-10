@@ -530,7 +530,7 @@ function renderPlay(){
   const freq={};
   last60.forEach(n=>freq[n]=(freq[n]||0)+1);
   const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]);
-  const top15=sorted.slice(0,15).map(([n])=>Number(n)).sort((a,b)=>a-b);
+  const top15=sorted.slice(0,5).map(([n])=>Number(n)).sort((a,b)=>a-b);
   const numsHTML = top15.length
     ? top15.map(n=>`<div class="play-num-chip ${colorClass(n)}">${n}</div>`).join('')
     : `<span class="play-no-signal">Pas assez de données</span>`;
