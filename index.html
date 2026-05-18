@@ -238,7 +238,7 @@ function updateHotNums(){
   if(!w.length){el.innerHTML='<span class="hot-empty">Pas assez de données</span>';return;}
   const freq={};
   w.forEach(x=>freq[x]=(freq[x]||0)+1);
-  const top=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([x])=>Number(x)).sort((a,b)=>a-b);
+  const top=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([x])=>Number(x));
   el.innerHTML=top.map(n=>`<div class="hot-chip ${colorClass(n)}">${n}</div>`).join('');
 }
 
