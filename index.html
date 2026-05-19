@@ -190,7 +190,16 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
 
       <!-- Sliders -->
       <div style="background:var(--bg2);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;">
-        <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px">Paramètres martingale</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em;">Paramètres martingale</div>
+          <button onclick="openOptimizer()" style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.08em;padding:5px 14px;border-radius:8px;border:1.5px solid var(--gold);background:transparent;color:var(--gold);cursor:pointer;transition:background 0.15s;">⚙ Optimiser</button>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;color:var(--txt2);min-width:150px">Rounds affichés</span>
+          <input type="range" id="o-rounds" min="10" max="500" step="10" value="100" oninput="renderOpt()" style="flex:1">
+          <span style="font-size:13px;font-weight:600;min-width:36px;text-align:right" id="o-rounds-v">100</span>
+        </div>
 
         <div style="display:flex;align-items:center;gap:10px;">
           <span style="font-size:12px;color:var(--txt2);min-width:150px">Payout (gain factor)</span>
@@ -241,11 +250,13 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
       </div>
 
       <!-- Chart -->
-      <div style="background:var(--bg2);border-radius:12px;padding:12px;flex:1;min-height:200px;display:flex;align-items:center;justify-content:center;">
-        <canvas id="o-chart"></canvas>
+      <div style="background:var(--bg2);border-radius:12px;padding:12px 12px 14px;display:flex;flex-direction:column;gap:8px;">
+        <div style="position:relative;height:220px;width:100%;">
+          <canvas id="o-chart"></canvas>
+        </div>
       </div>
 
-      <div style="background:var(--bg2);border-radius:12px;padding:12px;flex:1;min-height:200px;display:flex;flex-direction:column;gap:8px;">
+      <div style="background:var(--bg2);border-radius:12px;padding:12px 12px 14px;display:flex;flex-direction:column;gap:8px;">
         <div style="display:flex;align-items:center;justify-content:space-between;">
           <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em">Mise engagée cumulée (toutes pertes)</div>
           <div style="display:flex;align-items:center;gap:6px">
@@ -255,14 +266,156 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
               style="width:72px;background:var(--bg3);border:1.5px solid var(--border);border-radius:7px;color:var(--txt);font-family:'Bebas Neue',sans-serif;font-size:18px;text-align:center;padding:4px 6px;outline:none;-moz-appearance:textfield;">
           </div>
         </div>
-        <canvas id="o-cost-chart"></canvas>
+        <div style="position:relative;height:220px;width:100%;">
+          <canvas id="o-cost-chart"></canvas>
+        </div>
+        <div id="o-ruin-msg" style="font-size:12px;font-weight:600;text-align:center;min-height:18px;"></div>
+      </div>
+
+      <!-- MONTE CARLO -->
+      <div style="background:var(--bg2);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;border-top:2px solid var(--border);">
+        <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em;">Simulation Monte Carlo</div>
+
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;color:var(--txt2);min-width:150px">Numéros joués</span>
+          <input type="range" id="mc-picked" min="1" max="18" step="1" value="1" oninput="updateMC()" style="flex:1">
+          <span style="font-size:13px;font-weight:600;min-width:36px;text-align:right" id="mc-picked-v">1</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;color:var(--txt2);min-width:150px">Numéros dispo</span>
+          <input type="range" id="mc-total" min="2" max="100" step="1" value="37" oninput="updateMC()" style="flex:1">
+          <span style="font-size:13px;font-weight:600;min-width:36px;text-align:right" id="mc-total-v">37</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;color:var(--txt2);min-width:150px">Simulations</span>
+          <input type="range" id="mc-sims" min="10" max="200" step="10" value="50" oninput="updateMC()" style="flex:1">
+          <span style="font-size:13px;font-weight:600;min-width:36px;text-align:right" id="mc-sims-v">50</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;color:var(--txt2);min-width:150px">Rounds / simulation</span>
+          <input type="range" id="mc-rounds" min="10" max="500" step="10" value="100" oninput="updateMC()" style="flex:1">
+          <span style="font-size:13px;font-weight:600;min-width:36px;text-align:right" id="mc-rounds-v">100</span>
+        </div>
+
+        <!-- stats row -->
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
+          <div style="background:var(--bg3);border-radius:10px;padding:10px 8px;text-align:center;">
+            <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">P(gagner)</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:#1db954" id="mc-pwin">—</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:10px;padding:10px 8px;text-align:center;">
+            <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Gain moy.</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--txt)" id="mc-avgnet">—</div>
+          </div>
+        </div>
+
+        <!-- curves -->
+        <div style="background:var(--bg3);border-radius:10px;padding:10px;min-height:220px;">
+          <div style="position:relative;height:220px;width:100%;">
+            <canvas id="mc-chart"></canvas>
+          </div>
+        </div>
       </div>
 
     </div>
   </div>
 </div>
 
+<!-- OPTIMIZER MODAL -->
+<div id="opt-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;flex-direction:column;align-items:center;justify-content:flex-start;padding:16px;">
+  <div style="background:var(--bg2);border-radius:16px;width:100%;max-width:460px;display:flex;flex-direction:column;max-height:90dvh;overflow:hidden;">
+
+    <!-- Modal header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:0.08em;color:var(--txt)">⚙ Optimiseur CMA-ES</span>
+      <button onclick="closeOptimizer()" style="background:none;border:none;color:var(--txt2);font-size:22px;cursor:pointer;line-height:1;">✕</button>
+    </div>
+
+    <!-- Modal tabs -->
+    <div style="display:flex;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <button id="modal-tab-params" onclick="switchModalTab('params')" style="flex:1;padding:10px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.07em;border:none;background:transparent;color:var(--gold);border-bottom:3px solid var(--gold);cursor:pointer;">Paramètres</button>
+      <button id="modal-tab-results" onclick="switchModalTab('results')" style="flex:1;padding:10px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.07em;border:none;background:transparent;color:var(--txt3);border-bottom:3px solid transparent;cursor:pointer;">Résultats</button>
+    </div>
+
+    <!-- Params tab -->
+    <div id="modal-panel-params" style="flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px;">
+
+      <!-- Fixed inputs -->
+      <div style="background:var(--bg3);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px">Contraintes fixes</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;color:var(--txt2);min-width:130px">Capital max</span>
+          <input id="cma-capital" type="number" min="0" step="any" placeholder="ex: 200"
+            style="flex:1;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;color:var(--txt);font-family:'Bebas Neue',sans-serif;font-size:18px;text-align:center;padding:5px 8px;outline:none;">
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;color:var(--txt2);min-width:130px">Rounds</span>
+          <input id="cma-rounds" type="number" min="10" step="10" value="100"
+            style="flex:1;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;color:var(--txt);font-family:'Bebas Neue',sans-serif;font-size:18px;text-align:center;padding:5px 8px;outline:none;">
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;color:var(--txt2);min-width:130px">Max générations</span>
+          <input id="cma-gens" type="number" min="10" step="10" value="100"
+            style="flex:1;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;color:var(--txt);font-family:'Bebas Neue',sans-serif;font-size:18px;text-align:center;padding:5px 8px;outline:none;">
+        </div>
+      </div>
+
+      <!-- Parameters to optimize -->
+      <div style="background:var(--bg3);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px">Paramètres à optimiser</div>
+        <div id="cma-param-rows" style="display:flex;flex-direction:column;gap:6px;"></div>
+      </div>
+
+
+
+      <!-- Survival weight -->
+      <div style="background:var(--bg3);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px">Fonction objectif</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;color:var(--txt2);min-width:130px">λ Survie</span>
+          <input type="range" id="cma-w-survival" min="0" max="5" step="0.1" value="1"
+            oninput="document.getElementById('cma-w-survival-v').textContent=parseFloat(this.value).toFixed(1)"
+            style="flex:1">
+          <span style="font-size:12px;font-weight:600;min-width:28px;text-align:right" id="cma-w-survival-v">1.0</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;color:var(--txt2);min-width:130px">α Perte (aversion)</span>
+          <input type="range" id="cma-w-alpha" min="1" max="10" step="0.1" value="2"
+            oninput="document.getElementById('cma-w-alpha-v').textContent=parseFloat(this.value).toFixed(1)"
+            style="flex:1">
+          <span style="font-size:12px;font-weight:600;min-width:28px;text-align:right" id="cma-w-alpha-v">2.0</span>
+        </div>
+      </div>
+
+      <!-- Run button -->
+      <button id="cma-run-btn" onclick="runOptimizer()" style="width:100%;padding:16px;font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:0.1em;border-radius:12px;border:none;background:var(--gold);color:#0f0f0f;cursor:pointer;">▶ Lancer</button>
+    </div>
+
+    <!-- Results tab -->
+    <div id="modal-panel-results" style="display:none;flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;">
+      <!-- Progress -->
+      <div style="background:var(--bg3);border-radius:10px;padding:12px 14px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+          <span style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em" id="cma-status">En attente</span>
+          <span style="font-size:11px;color:var(--txt2)" id="cma-gen-label">—</span>
+        </div>
+        <div style="background:var(--bg2);border-radius:4px;height:6px;overflow:hidden;">
+          <div id="cma-progress-bar" style="height:100%;width:0%;background:var(--gold);border-radius:4px;transition:width 0.3s;"></div>
+        </div>
+        <div style="margin-top:6px;font-size:12px;color:var(--txt2)" id="cma-best-score">Score meilleur : —</div>
+      </div>
+      <!-- Results list -->
+      <div id="cma-results-list" style="display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:13px;color:var(--txt3);text-align:center;padding:2rem 0">Lancez une optimisation pour voir les résultats</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <script>
+
 const RED_NUMS = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
 const turns = [];
 let selected = null;
@@ -438,7 +591,7 @@ function switchTab(tab){
   ['entry','stats','play','opt'].forEach(p=>document.getElementById('panel-'+p).classList.toggle('active',p===tab));
   if(tab==='stats')renderStats();
   if(tab==='play')renderPlay();
-  if(tab==='opt'){renderOpt();}
+  if(tab==='opt'){renderOpt(); updateMC();}
 }
 
 function renderPlay(){
@@ -669,6 +822,63 @@ function saveOptState(){
   });
 }
 
+function saveOptimizerState(){
+  openDB(db => {
+    const get = id => { const el=document.getElementById(id); return el ? el.value : null; };
+    const state = {
+      capital:    get('cma-capital'),
+      rounds:     get('cma-rounds'),
+      gens:       get('cma-gens'),
+      wSurvival:  get('cma-w-survival'),
+      wAlpha:     get('cma-w-alpha'),
+    };
+    // param rows (checked, min, max, step, defval)
+    state.params = {};
+    ['gain','factor','freq','init','minbet'].forEach(id => {
+      const chk = document.getElementById('cma-check-'+id);
+      state.params[id] = {
+        checked: chk ? chk.checked : true,
+        min:     get('cma-min-'+id),
+        max:     get('cma-max-'+id),
+        step:    get('cma-step-'+id),
+        defval:  get('cma-defval-'+id),
+      };
+    });
+    db.transaction('state','readwrite').objectStore('state').put(state,'optimizer');
+  });
+}
+
+function loadOptimizerState(cb){
+  openDB(db => {
+    const req = db.transaction('state').objectStore('state').get('optimizer');
+    req.onsuccess = e => cb(e.target.result || null);
+    req.onerror   = () => cb(null);
+  });
+}
+
+function applyOptimizerState(s){
+  if(!s) return;
+  const set = (id, val) => { const el=document.getElementById(id); if(el && val!=null) el.value=val; };
+  set('cma-capital',    s.capital);
+  set('cma-rounds',     s.rounds);
+  set('cma-gens',       s.gens);
+  set('cma-w-survival', s.wSurvival);
+  if(s.wSurvival) document.getElementById('cma-w-survival-v').textContent = parseFloat(s.wSurvival).toFixed(1);
+  set('cma-w-alpha', s.wAlpha);
+  if(s.wAlpha) document.getElementById('cma-w-alpha-v').textContent = parseFloat(s.wAlpha).toFixed(1);
+  if(s.params){
+    ['gain','factor','freq','init','minbet'].forEach(id => {
+      const p = s.params[id]; if(!p) return;
+      const chk = document.getElementById('cma-check-'+id);
+      if(chk){ chk.checked = p.checked; toggleParamRow(id); }
+      set('cma-min-'+id,    p.min);
+      set('cma-max-'+id,    p.max);
+      set('cma-step-'+id,   p.step);
+      set('cma-defval-'+id, p.defval);
+    });
+  }
+}
+
 function loadOptState(cb){
   openDB(db => {
     const req = db.transaction(STORE).objectStore(STORE).get('opt');
@@ -749,6 +959,504 @@ function newPlay(){
   }
 }
 
+
+// ── MONTE CARLO ──
+let mcChart = null;
+
+function updateMC(){
+  const picked    = parseInt(document.getElementById('mc-picked').value);
+  const total     = parseInt(document.getElementById('mc-total').value);
+  const sims      = parseInt(document.getElementById('mc-sims').value);
+  const numRounds = parseInt(document.getElementById('mc-rounds').value);
+
+  document.getElementById('mc-picked-v').textContent  = picked;
+  document.getElementById('mc-total-v').textContent   = total;
+  document.getElementById('mc-sims-v').textContent    = sims;
+  document.getElementById('mc-rounds-v').textContent  = numRounds;
+
+  const p = Math.min(picked, total - 1) / total;
+
+  const gain   = parseFloat(document.getElementById('o-gain').value   || 2);
+  const factor = parseFloat(document.getElementById('o-factor').value || 2);
+  const freq   = parseInt(document.getElementById('o-freq').value     || 4);
+  const init   = parseFloat(document.getElementById('o-init').value   || 1);
+  const minBet = getMinBet();
+  const maxCapEl = document.getElementById('o-maxcap');
+  const maxCap = (maxCapEl && maxCapEl.value !== '') ? parseFloat(maxCapEl.value) : Infinity;
+
+  function betAt(r){ return ceilToStep(init * Math.pow(factor, Math.floor((r-1)/freq)), minBet); }
+
+  // each simulation: run numRounds rounds continuously, track cumulative gain
+  // each round: bet betAt(r), win with prob p → gain payout*bet - bet, lose → -bet
+  // r resets to 1 after each win (new martingale sequence)
+  const trajectories = [];
+  const finalGains = [];
+
+  for(let s = 0; s < sims; s++){
+    const traj = [];
+    let cumGain = 0;
+    let seqRound = 1;   // round within current martingale sequence
+    let seqSpent = 0;   // cumulative bet within current sequence
+    let busted = false;
+
+    for(let round = 0; round < numRounds; round++){
+      if(busted){ traj.push(cumGain); continue; }
+
+      const bet = betAt(seqRound);
+
+      // capital check: would placing this bet exceed max capital?
+      if(maxCap < Infinity && seqSpent + bet > maxCap){
+        // can't place the bet — bust, lose what was spent this sequence
+        cumGain -= seqSpent;
+        busted = true;
+        traj.push(parseFloat(cumGain.toFixed(4)));
+        continue;
+      }
+
+      seqSpent += bet;
+
+      if(Math.random() < p){
+        // win: net for this sequence = payout*bet - total spent this sequence
+        cumGain += gain * bet - seqSpent;
+        // reset sequence
+        seqRound = 1;
+        seqSpent = 0;
+      } else {
+        // lose this round, escalate
+        seqRound++;
+      }
+      traj.push(parseFloat(cumGain.toFixed(4)));
+    }
+    trajectories.push(traj);
+    finalGains.push(traj[traj.length - 1]);
+  }
+
+  // stats
+  const winningTraj = finalGains.filter(v => v > 0).length;
+  const pWinPct     = (winningTraj / sims * 100).toFixed(1);
+  const avgNet      = (finalGains.reduce((a,b)=>a+b,0) / sims).toFixed(2);
+  document.getElementById('mc-pwin').textContent   = pWinPct + '%';
+  document.getElementById('mc-avgnet').textContent = avgNet;
+  document.getElementById('mc-avgnet').style.color = parseFloat(avgNet) >= 0 ? '#1db954' : 'var(--red)';
+
+  const labels = Array.from({length: numRounds}, (_,i) => i+1);
+
+  // mean curve
+  const meanCurve = labels.map((_,i) => parseFloat((trajectories.reduce((a,t) => a+t[i],0)/sims).toFixed(4)));
+
+  // color by final gain
+  function trajColor(traj){ return traj[traj.length-1] >= 0 ? 'rgba(29,185,84,0.25)' : 'rgba(192,57,43,0.25)'; }
+  function trajBorder(traj){ return traj[traj.length-1] >= 0 ? 'rgba(29,185,84,0.6)' : 'rgba(192,57,43,0.5)'; }
+
+  const datasets = trajectories.map((traj,i) => ({
+    data: traj,
+    borderColor: trajBorder(traj),
+    backgroundColor: trajColor(traj),
+    borderWidth: 1,
+    pointRadius: 0,
+    fill: false,
+    tension: 0.1,
+    label: i === 0 ? 'Trajectoire' : '',
+    order: 2,
+  }));
+
+  // zero line
+  datasets.push({ data: Array(numRounds).fill(0), borderColor: 'rgba(255,255,255,0.15)',
+    borderWidth: 1, borderDash:[3,3], pointRadius:0, fill:false, label:'', order:1 });
+
+  // mean curve on top
+  datasets.push({ data: meanCurve, borderColor: '#e8a020', borderWidth: 2.5,
+    pointRadius:0, fill:false, tension:0.2, label:'Moyenne', order:0 });
+
+  const canvas = document.getElementById('mc-chart');
+  if(mcChart){ mcChart.destroy(); mcChart = null; }
+  mcChart = new Chart(canvas, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: { duration: 0 },
+      plugins: {
+        legend: { display: true, labels: { color:'#a0a0a8', font:{size:10}, boxWidth:12,
+          filter: item => item.text !== '' } },
+        tooltip: { mode:'index', intersect:false, callbacks: {
+          title: ctx => 'Round ' + ctx[0].label,
+          label: ctx => ctx.dataset.label ? ctx.dataset.label+' : '+ctx.raw : null
+        }}
+      },
+      scales: {
+        x: { ticks:{color:'#606068',font:{size:9},maxTicksLimit:10}, grid:{color:'#2a2a2d'} },
+        y: { ticks:{color:'#606068',font:{size:10}}, grid:{color:'#2a2a2d'},
+          title:{display:true,text:'Gain cumulé',color:'#606068',font:{size:10}} }
+      }
+    }
+  });
+}
+
+
+
+
+
+// ── OPTIMIZER ──
+const CMA_PARAMS = [
+  { id:'gain',   label:'Payout',           min:1,    max:50,  step:0.5,  defVal:2   },
+  { id:'factor', label:'Multiplicateur',   min:1,    max:10,  step:0.1,  defVal:2   },
+  { id:'freq',   label:'Tours avant hausse',min:1,   max:30,  step:1,    defVal:4   },
+  { id:'init',   label:'Mise initiale',    min:0.1,  max:5,   step:0.1,  defVal:1   },
+  { id:'minbet', label:'Mise minimum',     min:0.05, max:2,   step:0.05, defVal:0.2 },
+];
+
+let optimizerWorker = null;
+let optimizerResults = [];
+
+function openOptimizer(){
+  // sync capital from o-maxcap
+  const capEl = document.getElementById('o-maxcap');
+  if(capEl && capEl.value) document.getElementById('cma-capital').value = capEl.value;
+  const roundsEl = document.getElementById('o-rounds');
+  if(roundsEl) document.getElementById('cma-rounds').value = roundsEl.value;
+
+  buildParamRows();
+  loadOptimizerState(applyOptimizerState);
+  document.getElementById('opt-modal').style.display = 'flex';
+  switchModalTab('params');
+}
+
+function closeOptimizer(){
+  document.getElementById('opt-modal').style.display = 'none';
+  if(optimizerWorker){ optimizerWorker.terminate(); optimizerWorker = null; }
+  saveOptimizerState();
+}
+
+function switchModalTab(tab){
+  ['params','results'].forEach(t => {
+    const btn = document.getElementById('modal-tab-'+t);
+    const panel = document.getElementById('modal-panel-'+t);
+    const active = t === tab;
+    btn.style.color = active ? 'var(--gold)' : 'var(--txt3)';
+    btn.style.borderBottomColor = active ? 'var(--gold)' : 'transparent';
+    panel.style.display = active ? 'flex' : 'none';
+  });
+}
+
+const OPT_SLIDER_MAP = {gain:'o-gain',factor:'o-factor',freq:'o-freq',init:'o-init',minbet:'o-minbet'};
+
+function getCurrentOptVal(id){
+  const el = document.getElementById(OPT_SLIDER_MAP[id]);
+  return el ? parseFloat(el.value) : null;
+}
+
+function toggleParamRow(id){
+  const checked = document.getElementById('cma-check-'+id).checked;
+  const rangeEl = document.getElementById('cma-range-'+id);
+  const fixedEl = document.getElementById('cma-fixed-'+id);
+  rangeEl.style.display = checked ? 'flex' : 'none';
+  fixedEl.style.display = checked ? 'none' : 'flex';
+}
+
+function buildParamRows(){
+  const container = document.getElementById('cma-param-rows');
+  container.innerHTML = '';
+  CMA_PARAMS.forEach(p => {
+    const curVal = getCurrentOptVal(p.id) ?? p.defVal;
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
+    row.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="cma-check-${p.id}" checked
+          onchange="toggleParamRow('${p.id}')"
+          style="width:16px;height:16px;accent-color:var(--gold);flex-shrink:0;">
+        <label for="cma-check-${p.id}" style="font-size:12px;color:var(--txt2);min-width:120px;cursor:pointer;">${p.label}</label>
+
+        <!-- range inputs (shown when checked) -->
+        <div id="cma-range-${p.id}" style="display:flex;align-items:center;gap:4px;flex:1;">
+          <input type="number" id="cma-min-${p.id}" value="${p.min}" step="${p.step}"
+            style="width:44px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--txt);font-size:12px;text-align:center;padding:3px 4px;outline:none;" placeholder="min">
+          <span style="font-size:10px;color:var(--txt3)">→</span>
+          <input type="number" id="cma-max-${p.id}" value="${p.max}" step="${p.step}"
+            style="width:44px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--txt);font-size:12px;text-align:center;padding:3px 4px;outline:none;" placeholder="max">
+          <span style="font-size:10px;color:var(--txt3)">±</span>
+          <input type="number" id="cma-step-${p.id}" value="${p.step}" step="${p.step}"
+            style="width:44px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--txt2);font-size:12px;text-align:center;padding:3px 4px;outline:none;" placeholder="pas">
+        </div>
+
+        <!-- fixed value (shown when unchecked) -->
+        <div id="cma-fixed-${p.id}" style="display:none;align-items:center;gap:4px;flex:1;">
+          <span style="font-size:10px;color:var(--txt3)">Fixé :</span>
+          <input type="number" id="cma-defval-${p.id}" value="${curVal}" step="${p.step}"
+            style="width:70px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--gold);font-size:13px;text-align:center;padding:3px 4px;outline:none;">
+        </div>
+      </div>
+    `;
+    container.appendChild(row);
+  });
+}
+
+function runOptimizer(){
+  if(optimizerWorker){ optimizerWorker.terminate(); optimizerWorker = null; }
+  optimizerResults = [];
+  document.getElementById('cma-results-list').innerHTML = '';
+  document.getElementById('cma-progress-bar').style.width = '0%';
+  document.getElementById('cma-status').textContent = 'Initialisation…';
+  document.getElementById('cma-gen-label').textContent = '';
+  document.getElementById('cma-best-score').textContent = 'Score meilleur : —';
+  switchModalTab('results');
+
+  const capital  = parseFloat(document.getElementById('cma-capital').value) || Infinity;
+  const rounds   = parseInt(document.getElementById('cma-rounds').value)    || 100;
+  const maxGens       = parseInt(document.getElementById('cma-gens').value)       || 100;
+  const lambdaSurvival = parseFloat(document.getElementById('cma-w-survival').value) || 1;
+  const alpha          = parseFloat(document.getElementById('cma-w-alpha').value)    || 2;
+
+  const activeParams = CMA_PARAMS.filter(p => document.getElementById('cma-check-'+p.id).checked)
+    .map(p => ({
+      id: p.id, label: p.label,
+      step: parseFloat(document.getElementById('cma-step-'+p.id).value) || p.step,
+      min: parseFloat(document.getElementById('cma-min-'+p.id).value),
+      max: parseFloat(document.getElementById('cma-max-'+p.id).value),
+      defVal: getCurrentOptVal(p.id) ?? p.defVal,
+    }));
+
+  const fixedParams = {};
+  CMA_PARAMS.filter(p => !document.getElementById('cma-check-'+p.id).checked)
+    .forEach(p => {
+      const el = document.getElementById('cma-defval-'+p.id);
+      fixedParams[p.id] = el ? parseFloat(el.value) : p.defVal;
+    });
+
+  const workerCode = `
+const betAt = (r, init, factor, freq, minbet) => {
+  const step = Math.floor((r-1)/freq);
+  const raw = init * Math.pow(factor, step);
+  return Math.ceil(raw / minbet) * minbet;
+};
+
+function evaluate(params, capital, rounds, lambdaSurvival, alpha){
+  const {gain, factor, freq, init, minbet, p} = params;
+  let score = 0;
+  let cumCost = 0;
+  let rBust = rounds;
+  for(let r = 1; r <= rounds; r++){
+    const bet = betAt(r, init, factor, freq, minbet);
+    cumCost += bet;
+    if(capital < Infinity && cumCost > capital){ rBust = r - 1; break; }
+    const netGain = gain * bet - cumCost;
+    const pWinAtR = p * Math.pow(1 - p, r - 1);
+    const utility = netGain > 0
+      ? Math.log(1 + netGain)
+      : -alpha * Math.log(1 - netGain + 1);
+    score += utility * pWinAtR;
+  }
+  score += lambdaSurvival * (rBust / rounds);
+  return score;
+}
+
+function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+self.onmessage = function(e){
+  const {activeParams, fixedParams, capital, rounds, maxGens, pWin, lambdaSurvival, alpha} = e.data;
+  const n = activeParams.length;
+  if(n === 0){ self.postMessage({type:'done', results:[]}); return; }
+
+  // CMA-ES setup
+  const lambda = 4 + Math.floor(3 * Math.log(n));
+  const mu = Math.floor(lambda / 2);
+  const weights = Array.from({length: mu}, (_,i) => Math.log(mu + 0.5) - Math.log(i+1));
+  const wSum = weights.reduce((a,b)=>a+b,0);
+  const wNorm = weights.map(w => w/wSum);
+  const muEff = 1 / wNorm.reduce((a,w)=>a+w*w,0);
+
+  const cc = (4+muEff/n)/(n+4+2*muEff/n);
+  const cs = (muEff+2)/(n+muEff+5);
+  const c1 = 2/((n+1.3)**2+muEff);
+  const cmu = Math.min(1-c1, 2*(muEff-2+1/muEff)/((n+2)**2+muEff));
+  const damps = 1+2*Math.max(0,Math.sqrt((muEff-1)/(n+1))-1)+cs;
+  const chiN = Math.sqrt(n)*(1-1/(4*n)+1/(21*n*n));
+
+  // init mean at midpoint of ranges
+  let mean = activeParams.map(p => (p.min+p.max)/2);
+  let sigma = 0.3;
+  let pc = Array(n).fill(0);
+  let ps = Array(n).fill(0);
+  let C = Array.from({length:n}, (_,i) => Array.from({length:n}, (_,j) => i===j?1:0));
+  let eigenvalues = Array(n).fill(1);
+  let eigenvectors = Array.from({length:n}, (_,i)=>Array.from({length:n},(_,j)=>i===j?1:0));
+  let eigenUpdateCount = 0;
+
+  const allResults = [];
+  let bestScore = -Infinity, bestParams = null;
+
+  for(let gen = 0; gen < maxGens; gen++){
+    // sample lambda candidates
+    const candidates = [];
+    for(let k = 0; k < lambda; k++){
+      // sample from N(0,C) using eigendecomposition
+      const z = Array.from({length:n}, ()=>{
+        let u=0; for(let i=0;i<6;i++) u+=Math.random(); return u-3;
+      });
+      const y = Array(n).fill(0);
+      for(let i=0;i<n;i++) for(let j=0;j<n;j++) y[i] += eigenvectors[i][j] * Math.sqrt(Math.max(0,eigenvalues[j])) * z[j];
+      const x = mean.map((m,i) => m + sigma * y[i]);
+      candidates.push({x, y, z});
+    }
+
+    // evaluate
+    const scored = candidates.map(c => {
+      const xClamped = c.x.map((v,i) => clamp(v, activeParams[i].min, activeParams[i].max));
+      const params = {...fixedParams, p: pWin};
+      activeParams.forEach((p,i) => params[p.id] = xClamped[i]);
+      const score = evaluate(params, capital, rounds, lambdaSurvival, alpha);
+      return {x: xClamped, y: c.y, score};
+    }).sort((a,b) => b.score - a.score);
+
+    // update mean
+    const oldMean = [...mean];
+    mean = Array(n).fill(0);
+    for(let i=0;i<mu;i++) for(let j=0;j<n;j++) mean[j] += wNorm[i]*scored[i].x[j];
+
+    // step-size control
+    const meany = Array(n).fill(0);
+    for(let i=0;i<mu;i++) for(let j=0;j<n;j++) meany[j] += wNorm[i]*scored[i].y[j];
+    const invsqrtC_meany = Array(n).fill(0);
+    for(let i=0;i<n;i++) for(let j=0;j<n;j++) invsqrtC_meany[i] += eigenvectors[i][j]*(1/Math.sqrt(Math.max(1e-10,eigenvalues[j])))*meany[j];
+    ps = ps.map((v,i) => (1-cs)*v + Math.sqrt(cs*(2-cs)*muEff)*invsqrtC_meany[i]);
+    const psNorm = Math.sqrt(ps.reduce((a,v)=>a+v*v,0));
+    sigma *= Math.exp((cs/damps)*(psNorm/chiN-1));
+
+    // covariance update
+    const hsig = psNorm/Math.sqrt(1-Math.pow(1-cs,2*(gen+1)))/chiN < 1.4+2/(n+1) ? 1 : 0;
+    pc = pc.map((v,i) => (1-cc)*v + hsig*Math.sqrt(cc*(2-cc)*muEff)*meany[i]);
+    for(let i=0;i<n;i++) for(let j=0;j<n;j++){
+      let rankOne = pc[i]*pc[j];
+      let rankMu = 0;
+      for(let k=0;k<mu;k++) rankMu += wNorm[k]*scored[k].y[i]*scored[k].y[j];
+      C[i][j] = (1-c1-cmu)*C[i][j] + c1*(rankOne+(1-hsig)*cc*(2-cc)*C[i][j]) + cmu*rankMu;
+    }
+
+    // re-eigendecompose every 10 gens (cheap for small n)
+    eigenUpdateCount++;
+    if(eigenUpdateCount % 10 === 0){
+      // simple Jacobi for small matrices
+      let A = C.map(row=>[...row]);
+      let V = Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>i===j?1:0));
+      for(let sweep=0;sweep<20;sweep++){
+        for(let p2=0;p2<n-1;p2++) for(let q=p2+1;q<n;q++){
+          const apq=A[p2][q];
+          if(Math.abs(apq)<1e-10) continue;
+          const tau=(A[q][q]-A[p2][p2])/(2*apq);
+          const t=Math.sign(tau)/(Math.abs(tau)+Math.sqrt(1+tau*tau));
+          const c2=1/Math.sqrt(1+t*t), s2=t*c2;
+          for(let r=0;r<n;r++){const ap=A[r][p2],aq=A[r][q];A[r][p2]=c2*ap-s2*aq;A[r][q]=s2*ap+c2*aq;}
+          for(let r=0;r<n;r++){const ap=A[p2][r],aq=A[q][r];A[p2][r]=c2*ap-s2*aq;A[q][r]=s2*ap+c2*aq;}
+          for(let r=0;r<n;r++){const vp=V[r][p2],vq=V[r][q];V[r][p2]=c2*vp-s2*vq;V[r][q]=s2*vp+c2*vq;}
+        }
+      }
+      eigenvalues = Array.from({length:n},(_,i)=>A[i][i]);
+      eigenvectors = V;
+    }
+
+    // track best
+    if(scored[0].score > bestScore){
+      bestScore = scored[0].score;
+      bestParams = {...scored[0].x};
+    }
+
+    // record top result this gen
+    const topParams = {};
+    activeParams.forEach((p,i) => topParams[p.id] = +scored[0].x[i].toFixed(3));
+    Object.assign(topParams, fixedParams);
+    allResults.push({gen: gen+1, score: +scored[0].score.toFixed(4), params: topParams});
+
+    self.postMessage({type:'progress', gen: gen+1, maxGens, bestScore: +bestScore.toFixed(4),
+      topParams: topParams, topScore: +scored[0].score.toFixed(4)});
+  }
+  self.postMessage({type:'done', results: allResults});
+};
+`;
+
+  const blob = new Blob([workerCode], {type:'application/javascript'});
+  optimizerWorker = new Worker(URL.createObjectURL(blob));
+
+  const pWin = (() => {
+    const picked = parseInt(document.getElementById('mc-picked').value) || 1;
+    const total  = parseInt(document.getElementById('mc-total').value)  || 37;
+    return Math.min(picked, total-1) / total;
+  })();
+
+  optimizerWorker.postMessage({activeParams, fixedParams, capital, rounds, maxGens, pWin, lambdaSurvival, alpha});
+
+  optimizerWorker.onmessage = e => {
+    const d = e.data;
+    if(d.type === 'progress'){
+      const pct = (d.gen / d.maxGens * 100).toFixed(0);
+      document.getElementById('cma-progress-bar').style.width = pct + '%';
+      document.getElementById('cma-status').textContent = 'Optimisation en cours…';
+      document.getElementById('cma-gen-label').textContent = 'Gén. ' + d.gen + ' / ' + d.maxGens;
+      document.getElementById('cma-best-score').textContent = 'Score meilleur : ' + d.bestScore;
+      // add result card every 5 gens or first
+      if(d.gen === 1 || d.gen % 5 === 0){
+        addResultCard(d.gen, d.topScore || d.bestScore, d.topParams, activeParams, fixedParams);
+      }
+    } else if(d.type === 'done'){
+      document.getElementById('cma-status').textContent = '✓ Terminé';
+      document.getElementById('cma-progress-bar').style.width = '100%';
+      document.getElementById('cma-run-btn').disabled = false;
+      optimizerWorker = null;
+    }
+  };
+  document.getElementById('cma-run-btn').disabled = true;
+  saveOptimizerState();
+}
+
+function addResultCard(gen, score, params, activeParams, fixedParams){
+  const list = document.getElementById('cma-results-list');
+  if(list.querySelector('[data-placeholder]')) list.innerHTML = '';
+
+  const card = document.createElement('div');
+  card.style.cssText = 'background:var(--bg3);border-radius:10px;padding:10px 12px;cursor:pointer;border:1.5px solid transparent;transition:border-color 0.15s;';
+  card.onmouseenter = () => card.style.borderColor = 'var(--gold)';
+  card.onmouseleave = () => card.style.borderColor = 'transparent';
+
+  const paramsHTML = activeParams.map(p =>
+    `<span style="background:var(--bg2);border-radius:5px;padding:2px 7px;font-size:12px;color:var(--txt)">${p.label}: <b>${(+params[p.id]).toFixed(2)}</b></span>`
+  ).join('');
+
+  card.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <span style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.07em">Gén. ${gen}</span>
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold)">Score ${score}</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;">${paramsHTML}</div>
+    <div style="margin-top:8px;font-size:11px;color:var(--txt3);text-align:center;">Tap pour appliquer</div>
+  `;
+  card.onclick = () => applyOptimizerResult(params, activeParams, fixedParams);
+  list.insertBefore(card, list.firstChild);
+}
+
+function applyOptimizerResult(params, activeParams, fixedParams){
+  const map = {gain:'o-gain', factor:'o-factor', freq:'o-freq', init:'o-init', minbet:'o-minbet'};
+  // sync rounds and capital
+  const cmaRounds = document.getElementById('cma-rounds');
+  const oRounds   = document.getElementById('o-rounds');
+  if(cmaRounds && oRounds){ oRounds.value = cmaRounds.value; }
+  const cmaCapital = document.getElementById('cma-capital');
+  const oMaxcap    = document.getElementById('o-maxcap');
+  if(cmaCapital && oMaxcap){ oMaxcap.value = cmaCapital.value; }
+  // apply optimized params
+  activeParams.forEach(p => {
+    const el = document.getElementById(map[p.id]);
+    if(el){ el.value = (+params[p.id]).toFixed(p.id==='freq'?0:2); }
+  });
+  // apply fixed params
+  if(fixedParams){
+    Object.entries(fixedParams).forEach(([id, val]) => {
+      const el = document.getElementById(map[id]);
+      if(el){ el.value = (+val).toFixed(id==='freq'?0:2); }
+    });
+  }
+  renderOpt();
+  closeOptimizer();
+}
+
 buildGrid(); updateHistory(); updateRoundDisplay(); updateHotNums();
 document.getElementById('ok-btn').onclick = submitTurn;
 loadState(applyState);
@@ -782,7 +1490,8 @@ function renderOpt(){
     return ceilToStep(init * Math.pow(factor, s), minBet);
   }
 
-  const N = 100;
+  const N = parseInt(document.getElementById('o-rounds').value) || 100;
+  document.getElementById('o-rounds-v').textContent = N;
   const labels = [], netGains = [];
   let totalCost = 0;
   let bestGain = -Infinity, worstGain = Infinity, breakEven = null;
@@ -898,6 +1607,22 @@ function renderOpt(){
     });
   }
 
+  // ruin round marker: vertical spike dataset
+  if(ruinRound !== null){
+    const ruinSpike = Array(N).fill(null);
+    ruinSpike[ruinRound - 1] = cumCosts[ruinRound - 1];
+    datasets.push({
+      label: 'Ruine',
+      data: ruinSpike,
+      borderColor: '#c0392b',
+      backgroundColor: '#c0392b',
+      pointRadius: ctx => ctx.dataIndex === ruinRound - 1 ? 7 : 0,
+      pointStyle: 'crossRot',
+      showLine: false,
+      order: -1,
+    });
+  }
+
   const costCanvas = document.getElementById('o-cost-chart');
   if(costChart){ costChart.destroy(); costChart = null; }
   costChart = new Chart(costCanvas, {
@@ -912,9 +1637,11 @@ function renderOpt(){
         tooltip: {
           callbacks: {
             title: ctx => 'Tour ' + ctx[0].label,
-            label: ctx => ctx.dataset.label === 'Capital max'
-              ? 'Capital max : ' + ctx.raw.toFixed(2)
-              : 'Investi : ' + ctx.raw.toFixed(3)
+            label: ctx => {
+              if(ctx.dataset.label === 'Capital max') return 'Capital max : ' + ctx.raw.toFixed(2);
+              if(ctx.dataset.label === 'Ruine') return '⚠ Ruine ici';
+              return 'Investi : ' + ctx.raw.toFixed(3);
+            }
           }
         }
       },
@@ -933,23 +1660,18 @@ function renderOpt(){
   });
 
   // show ruin round info below chart
-  let ruinEl = document.getElementById('o-ruin-msg');
-  if(!ruinEl){
-    ruinEl = document.createElement('div');
-    ruinEl.id = 'o-ruin-msg';
-    ruinEl.style.cssText = 'font-size:12px;font-weight:600;text-align:center;margin-top:4px;';
-    costCanvas.parentNode.appendChild(ruinEl);
-  }
+  const ruinEl = document.getElementById('o-ruin-msg');
   if(ruinRound !== null){
     ruinEl.style.color = '#c0392b';
     ruinEl.textContent = '⚠ Capital épuisé au tour ' + ruinRound;
   } else if(maxCap !== null && maxCap > 0){
     ruinEl.style.color = '#1db954';
-    ruinEl.textContent = '✓ Capital suffisant sur 100 tours';
+    ruinEl.textContent = '✓ Capital suffisant sur ' + N + ' tours';
   } else {
     ruinEl.textContent = '';
   }
   saveOptState();
+  updateMC();
 }
 
 </script>
