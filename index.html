@@ -51,7 +51,8 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
 .history-section { flex-shrink: 0; padding: 2px 0 4px; }
 .section-label { font-size: 11px; color: var(--txt3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 7px; }
 .count-badge { background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; padding: 1px 7px; font-size: 11px; color: var(--txt2); display: inline-block; margin-left: 5px; }
-.history-row { display: flex; flex-wrap: nowrap; gap: 5px; overflow-x: auto; padding-bottom: 4px; }
+.history-row { display: flex; flex-wrap: nowrap; gap: 5px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; -ms-overflow-style: none; }
+.history-row::-webkit-scrollbar { display: none; }
 .hist-chip { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 14px; flex-shrink: 0; }
 .hist-chip.red { background: var(--red); color: #fff; }
 .hist-chip.blk { background: #2a2a2a; color: #fff; outline: 1px solid #555; }
@@ -107,6 +108,7 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
 .play-dozen-badge { display: block; padding: 14px 20px; border-radius: 12px; background: var(--bg3); border: 1px solid var(--border); font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 0.06em; color: var(--txt); text-align: center; width: 100%; }
 .play-empty { font-size: 16px; color: var(--txt2); text-align: center; margin: auto; padding: 2rem 0; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -114,6 +116,7 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
     <button class="tab active" onclick="switchTab('entry')">Entry</button>
     <button class="tab" onclick="switchTab('stats')">Stats</button>
     <button class="tab" onclick="switchTab('play')">Play</button>
+    <button class="tab" onclick="switchTab('opt')">Opt</button>
   </div>
 
   <div id="panel-entry" class="panel active">
@@ -131,16 +134,16 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
         <div class="history-row" id="history-row"><span style="color:var(--txt3);font-size:13px">Aucun tour</span></div>
       </div>
       <div class="round-counter-section">
-        <div class="round-left">
+        <div class="round-left" style="flex:1">
           <div class="round-label">Tour n°</div>
           <div style="display:flex;align-items:baseline;gap:14px">
             <div class="round-number" id="round-number">1</div>
             <div style="display:flex;flex-direction:column;align-items:center;gap:1px">
-              <span style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.07em">Série</span>
-              <span id="round-cycle" style="font-family:'Bebas Neue',sans-serif;font-size:42px;line-height:1;color:var(--txt2)">1</span>
+              <span style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.07em">Mise ×</span>
+              <span id="round-cycle" style="font-family:'Bebas Neue',sans-serif;font-size:42px;line-height:1;color:var(--gold)">1.0</span>
             </div>
           </div>
-          <div class="round-next" id="round-next">Prochain jalon : 18</div>
+          <div class="round-next" id="round-next"></div>
         </div>
         <button class="round-reset-btn" onclick="resetRoundCounter()">↺ Reset</button>
       </div>
@@ -158,6 +161,63 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
   <div id="panel-play" class="panel">
     <div class="play-inner" id="play-content"></div>
   </div>
+
+  <div id="panel-opt" class="panel">
+    <div style="padding:14px 12px;display:flex;flex-direction:column;gap:12px;flex:1;min-height:0;">
+
+      <!-- Sliders -->
+      <div style="background:var(--bg2);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px">Paramètres martingale</div>
+
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;color:var(--txt2);min-width:150px">Payout (gain factor)</span>
+          <input type="range" id="o-gain" min="1" max="50" step="1" value="2" oninput="renderOpt()" style="flex:1">
+          <span style="font-size:13px;font-weight:600;min-width:36px;text-align:right" id="o-gain-v">2×</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;color:var(--txt2);min-width:150px">Multiplicateur mise</span>
+          <input type="range" id="o-factor" min="1" max="10" step="0.1" value="2" oninput="renderOpt()" style="flex:1">
+          <span style="font-size:13px;font-weight:600;min-width:36px;text-align:right" id="o-factor-v">2.0</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;color:var(--txt2);min-width:150px">Tours avant hausse</span>
+          <input type="range" id="o-freq" min="1" max="30" step="1" value="4" oninput="renderOpt()" style="flex:1">
+          <span style="font-size:13px;font-weight:600;min-width:36px;text-align:right" id="o-freq-v">4</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;color:var(--txt2);min-width:150px">Mise initiale</span>
+          <input type="range" id="o-init" min="0.2" max="1" step="0.1" value="1" oninput="renderOpt()" style="flex:1">
+          <span style="font-size:13px;font-weight:600;min-width:36px;text-align:right" id="o-init-v">1.00</span>
+        </div>
+      </div>
+
+      <!-- Stats row -->
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;" id="o-stats">
+        <div style="background:var(--bg2);border-radius:10px;padding:10px 12px;">
+          <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Meilleur gain</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:#1db954" id="o-best">—</div>
+        </div>
+        <div style="background:var(--bg2);border-radius:10px;padding:10px 12px;">
+          <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Pire gain</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--red)" id="o-worst">—</div>
+        </div>
+        <div style="background:var(--bg2);border-radius:10px;padding:10px 12px;">
+          <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Seuil rentabilité</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--gold)" id="o-break">—</div>
+        </div>
+        <div style="background:var(--bg2);border-radius:10px;padding:10px 12px;">
+          <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Coût total (100t)</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--txt)" id="o-cost">—</div>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div style="background:var(--bg2);border-radius:12px;padding:12px;flex:1;min-height:200px;display:flex;align-items:center;justify-content:center;">
+        <canvas id="o-chart"></canvas>
+      </div>
+
+    </div>
+  </div>
 </div>
 
 <script>
@@ -165,19 +225,36 @@ const RED_NUMS = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
 const turns = [];
 let selected = null;
 let roundCounter = 1;
-
+function getCycleSize() {
+  const el = document.getElementById('o-freq');
+  const v = el ? parseInt(el.value) : 4;
+  return (v > 0 && !isNaN(v)) ? v : 4;
+}
+function getCurrentMultiplier() {
+  const freqEl   = document.getElementById('o-freq');
+  const factorEl = document.getElementById('o-factor');
+  const initEl   = document.getElementById('o-init');
+  const freq   = freqEl   ? parseInt(freqEl.value)     : 4;
+  const factor = factorEl ? parseFloat(factorEl.value) : 2;
+  const init   = initEl   ? parseFloat(initEl.value)   : 1;
+  const step   = Math.floor((roundCounter - 1) / freq);
+  return init * Math.pow(factor, step);
+}
 function isMilestone(n) {
-  return n > 1 && (n - 1) % 18 === 0;
+  const cs = getCycleSize();
+  return n > 1 && (n - 1) % cs === 0;
 }
 function nextMilestone(n) {
-  return Math.floor((n - 1) / 18) * 18 + 19;
+  const cs = getCycleSize();
+  return Math.floor((n - 1) / cs) * cs + cs + 1;
 }
 function updateRoundDisplay() {
   const el = document.getElementById('round-number');
   el.textContent = roundCounter;
   el.classList.toggle('milestone', isMilestone(roundCounter));
   document.getElementById('round-next').textContent = 'Prochain jalon : ' + nextMilestone(roundCounter);
-  document.getElementById('round-cycle').textContent = Math.floor((roundCounter - 1) / 18) + 1;
+  const mult = getCurrentMultiplier();
+  document.getElementById('round-cycle').textContent = mult % 1 === 0 ? mult.toFixed(0) : mult.toFixed(2);
 }
 function resetRoundCounter() { roundCounter = 1; updateRoundDisplay(); }
 
@@ -243,10 +320,11 @@ function updateHotNums(){
 }
 
 function switchTab(tab){
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['entry','stats','play'][i]===tab));
-  ['entry','stats','play'].forEach(p=>document.getElementById('panel-'+p).classList.toggle('active',p===tab));
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['entry','stats','play','opt'][i]===tab));
+  ['entry','stats','play','opt'].forEach(p=>document.getElementById('panel-'+p).classList.toggle('active',p===tab));
   if(tab==='stats')renderStats();
   if(tab==='play')renderPlay();
+  if(tab==='opt'){renderOpt();}
 }
 
 function renderPlay(){
@@ -310,6 +388,100 @@ function renderStats(){
 }
 
 buildGrid(); updateHistory(); updateRoundDisplay(); updateHotNums();
+
+// ── OPT TAB ──
+let optChart = null;
+
+function renderOpt(){
+  const gain   = parseFloat(document.getElementById('o-gain').value);
+  const factor = parseFloat(document.getElementById('o-factor').value);
+  const freq   = parseInt(document.getElementById('o-freq').value);
+  const init   = parseFloat(document.getElementById('o-init').value);
+
+  updateRoundDisplay();
+  document.getElementById('o-gain-v').textContent   = gain + '×';
+  document.getElementById('o-factor-v').textContent  = factor.toFixed(1);
+  document.getElementById('o-freq-v').textContent    = freq;
+  document.getElementById('o-init-v').textContent    = init.toFixed(2);
+
+  const N = 100;
+  const labels = [], netGains = [];
+  let totalCost = 0;
+  let bestGain = -Infinity, worstGain = Infinity, breakEven = null;
+
+  for(let r = 1; r <= N; r++){
+    // bet at round r: multiply every `freq` rounds (0-indexed step)
+    const step = Math.floor((r - 1) / freq);
+    const bet = init * Math.pow(factor, step);
+
+    // cumulative cost of rounds 1..r-1 (losses)
+    let cumLost = 0;
+    for(let i = 1; i < r; i++){
+      const s2 = Math.floor((i - 1) / freq);
+      cumLost += init * Math.pow(factor, s2);
+    }
+
+    // net gain if win at round r = payout - bet - cumLost
+    const net = gain * bet - bet - cumLost;
+    labels.push(r);
+    netGains.push(parseFloat(net.toFixed(4)));
+
+    if(net > bestGain) bestGain = net;
+    if(net < worstGain) worstGain = net;
+    if(breakEven === null && net >= 0) breakEven = r;
+    if(r === N) totalCost = cumLost + bet;
+  }
+
+  document.getElementById('o-best').textContent  = bestGain === -Infinity ? '—' : bestGain.toFixed(2);
+  document.getElementById('o-worst').textContent = worstGain === Infinity ? '—' : worstGain.toFixed(2);
+  document.getElementById('o-break').textContent = breakEven !== null ? 'Tour ' + breakEven : 'Jamais';
+  document.getElementById('o-cost').textContent  = totalCost.toFixed(2);
+
+  // colors per point: green if positive, red if negative
+  const ptColors = netGains.map(v => v >= 0 ? '#1db954' : '#c0392b');
+
+  const canvas = document.getElementById('o-chart');
+  if(optChart){ optChart.destroy(); optChart = null; }
+  optChart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Gain net',
+        data: netGains,
+        backgroundColor: ptColors,
+        borderRadius: 2,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 200 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: ctx => 'Tour ' + ctx[0].label,
+            label: ctx => 'Net : ' + ctx.raw.toFixed(3)
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#606068', font: { size: 10 }, maxTicksLimit: 10 },
+          grid: { color: '#2a2a2d' }
+        },
+        y: {
+          ticks: { color: '#606068', font: { size: 10 } },
+          grid: { color: '#2a2a2d' },
+          border: { dash: [3,3] }
+        }
+      }
+    }
+  });
+}
+
 </script>
 </body>
 </html>
