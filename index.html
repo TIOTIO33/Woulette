@@ -53,6 +53,10 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
 .count-badge { background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; padding: 1px 7px; font-size: 11px; color: var(--txt2); display: inline-block; margin-left: 5px; }
 .history-row { display: flex; flex-wrap: nowrap; gap: 5px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; -ms-overflow-style: none; }
 .history-row::-webkit-scrollbar { display: none; }
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: #0f0f0f; }
+::-webkit-scrollbar-thumb { background: #3a3a3e; border-radius: 3px; }
+* { scrollbar-width: thin; scrollbar-color: #3a3a3e #0f0f0f; }
 .hist-chip { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 14px; flex-shrink: 0; }
 .hist-chip.red { background: var(--red); color: #fff; }
 .hist-chip.blk { background: #2a2a2a; color: #fff; outline: 1px solid #555; }
@@ -189,6 +193,12 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
           <input type="range" id="o-init" min="0.2" max="1" step="0.1" value="1" oninput="renderOpt()" style="flex:1">
           <span style="font-size:13px;font-weight:600;min-width:36px;text-align:right" id="o-init-v">1.00</span>
         </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;color:var(--txt2);min-width:150px">Mise minimum (pas)</span>
+          <input type="number" id="o-minbet" min="0.01" step="0.01" value="0.2" oninput="renderOpt()"
+            style="flex:1;background:var(--bg3);border:1.5px solid var(--border);border-radius:7px;color:var(--txt);font-family:'Bebas Neue',sans-serif;font-size:18px;text-align:center;padding:5px 8px;outline:none;-moz-appearance:textfield;">
+          <span style="font-size:13px;font-weight:600;min-width:36px;text-align:right" id="o-minbet-v">0.20</span>
+        </div>
       </div>
 
       <!-- Stats row -->
@@ -216,6 +226,19 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
         <canvas id="o-chart"></canvas>
       </div>
 
+      <div style="background:var(--bg2);border-radius:12px;padding:12px;flex:1;min-height:200px;display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em">Mise engagée cumulée (toutes pertes)</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <label style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.07em">Capital max</label>
+            <input id="o-maxcap" type="number" min="0" step="any" placeholder="—"
+              oninput="renderOpt()"
+              style="width:72px;background:var(--bg3);border:1.5px solid var(--border);border-radius:7px;color:var(--txt);font-family:'Bebas Neue',sans-serif;font-size:18px;text-align:center;padding:4px 6px;outline:none;-moz-appearance:textfield;">
+          </div>
+        </div>
+        <canvas id="o-cost-chart"></canvas>
+      </div>
+
     </div>
   </div>
 </div>
@@ -230,6 +253,14 @@ function getCycleSize() {
   const v = el ? parseInt(el.value) : 4;
   return (v > 0 && !isNaN(v)) ? v : 4;
 }
+function getMinBet() {
+  const el = document.getElementById('o-minbet');
+  const v = el ? parseFloat(el.value) : 0.2;
+  return (v > 0 && !isNaN(v)) ? v : 0.2;
+}
+function ceilToStep(val, step) {
+  return Math.ceil(val / step) * step;
+}
 function getCurrentMultiplier() {
   const freqEl   = document.getElementById('o-freq');
   const factorEl = document.getElementById('o-factor');
@@ -237,8 +268,10 @@ function getCurrentMultiplier() {
   const freq   = freqEl   ? parseInt(freqEl.value)     : 4;
   const factor = factorEl ? parseFloat(factorEl.value) : 2;
   const init   = initEl   ? parseFloat(initEl.value)   : 1;
+  const minBet = getMinBet();
   const step   = Math.floor((roundCounter - 1) / freq);
-  return init * Math.pow(factor, step);
+  const raw    = init * Math.pow(factor, step);
+  return ceilToStep(raw, minBet);
 }
 function isMilestone(n) {
   const cs = getCycleSize();
@@ -391,18 +424,26 @@ buildGrid(); updateHistory(); updateRoundDisplay(); updateHotNums();
 
 // ── OPT TAB ──
 let optChart = null;
+let costChart = null;
 
 function renderOpt(){
   const gain   = parseFloat(document.getElementById('o-gain').value);
   const factor = parseFloat(document.getElementById('o-factor').value);
   const freq   = parseInt(document.getElementById('o-freq').value);
   const init   = parseFloat(document.getElementById('o-init').value);
+  const minBet = getMinBet();
 
   updateRoundDisplay();
   document.getElementById('o-gain-v').textContent   = gain + '×';
   document.getElementById('o-factor-v').textContent  = factor.toFixed(1);
   document.getElementById('o-freq-v').textContent    = freq;
   document.getElementById('o-init-v').textContent    = init.toFixed(2);
+  document.getElementById('o-minbet-v').textContent  = minBet.toFixed(2);
+
+  function betAt(r) {
+    const s = Math.floor((r - 1) / freq);
+    return ceilToStep(init * Math.pow(factor, s), minBet);
+  }
 
   const N = 100;
   const labels = [], netGains = [];
@@ -410,16 +451,11 @@ function renderOpt(){
   let bestGain = -Infinity, worstGain = Infinity, breakEven = null;
 
   for(let r = 1; r <= N; r++){
-    // bet at round r: multiply every `freq` rounds (0-indexed step)
-    const step = Math.floor((r - 1) / freq);
-    const bet = init * Math.pow(factor, step);
+    const bet = betAt(r);
 
     // cumulative cost of rounds 1..r-1 (losses)
     let cumLost = 0;
-    for(let i = 1; i < r; i++){
-      const s2 = Math.floor((i - 1) / freq);
-      cumLost += init * Math.pow(factor, s2);
-    }
+    for(let i = 1; i < r; i++) cumLost += betAt(i);
 
     // net gain if win at round r = payout - bet - cumLost
     const net = gain * bet - bet - cumLost;
@@ -480,6 +516,102 @@ function renderOpt(){
       }
     }
   });
+
+  // Build cumulative cost series (all rounds are losses)
+  const cumCosts = [];
+  let running = 0;
+  for(let r = 1; r <= N; r++){
+    running += betAt(r);
+    cumCosts.push(parseFloat(running.toFixed(4)));
+  }
+
+  const maxCapEl = document.getElementById('o-maxcap');
+  const maxCap = maxCapEl && maxCapEl.value !== '' ? parseFloat(maxCapEl.value) : null;
+
+  // find first round where cumulative cost exceeds capital
+  let ruinRound = null;
+  if(maxCap !== null && maxCap > 0){
+    for(let i = 0; i < cumCosts.length; i++){
+      if(cumCosts[i] > maxCap){ ruinRound = i + 1; break; }
+    }
+  }
+
+  const datasets = [{
+    label: 'Mise cumulée',
+    data: cumCosts,
+    borderColor: '#e8a020',
+    backgroundColor: 'rgba(232,160,32,0.08)',
+    borderWidth: 2,
+    pointRadius: 0,
+    fill: true,
+    tension: 0.1,
+    order: 1,
+  }];
+
+  if(maxCap !== null && maxCap > 0){
+    datasets.push({
+      label: 'Capital max',
+      data: Array(N).fill(maxCap),
+      borderColor: '#c0392b',
+      borderWidth: 2,
+      borderDash: [6, 4],
+      pointRadius: 0,
+      fill: false,
+      order: 0,
+    });
+  }
+
+  const costCanvas = document.getElementById('o-cost-chart');
+  if(costChart){ costChart.destroy(); costChart = null; }
+  costChart = new Chart(costCanvas, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 200 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: ctx => 'Tour ' + ctx[0].label,
+            label: ctx => ctx.dataset.label === 'Capital max'
+              ? 'Capital max : ' + ctx.raw.toFixed(2)
+              : 'Investi : ' + ctx.raw.toFixed(3)
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#606068', font: { size: 10 }, maxTicksLimit: 10 },
+          grid: { color: '#2a2a2d' }
+        },
+        y: {
+          ticks: { color: '#606068', font: { size: 10 } },
+          grid: { color: '#2a2a2d' },
+          border: { dash: [3,3] }
+        }
+      }
+    }
+  });
+
+  // show ruin round info below chart
+  let ruinEl = document.getElementById('o-ruin-msg');
+  if(!ruinEl){
+    ruinEl = document.createElement('div');
+    ruinEl.id = 'o-ruin-msg';
+    ruinEl.style.cssText = 'font-size:12px;font-weight:600;text-align:center;margin-top:4px;';
+    costCanvas.parentNode.appendChild(ruinEl);
+  }
+  if(ruinRound !== null){
+    ruinEl.style.color = '#c0392b';
+    ruinEl.textContent = '⚠ Capital épuisé au tour ' + ruinRound;
+  } else if(maxCap !== null && maxCap > 0){
+    ruinEl.style.color = '#1db954';
+    ruinEl.textContent = '✓ Capital suffisant sur 100 tours';
+  } else {
+    ruinEl.textContent = '';
+  }
 }
 
 </script>
