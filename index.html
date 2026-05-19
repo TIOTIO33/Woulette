@@ -649,7 +649,9 @@ function saveState(){
   openDB(db => {
     const tx = db.transaction(STORE, 'readwrite');
     tx.objectStore(STORE).put({
-      turns, roundCounter, playActive: document.getElementById('play-badge').style.display !== 'none'
+      turns: [...turns],
+      roundCounter,
+      playActive: document.getElementById('play-badge').style.display !== 'none'
     }, 'current');
   });
 }
@@ -696,18 +698,20 @@ function loadState(cb){
 }
 
 function applyState(s){
-  if(!s || !s.playActive) return;
+  if(!s) return;
+  // always restore history and counter
   turns.length = 0;
   if(s.turns) turns.push(...s.turns);
   roundCounter = s.roundCounter || 1;
-  // show badge
+  updateHistory(); updateRoundDisplay(); updateHotNums();
+  // restore play badge only if a play was active
+  if(!s.playActive) return;
   const badge = document.getElementById('play-badge');
   badge.style.display = 'flex';
   document.getElementById('new-play-btn').textContent = '■ Fin de partie';
   document.getElementById('new-play-btn').style.color = '#e05050';
   document.getElementById('new-play-btn').style.borderColor = '#6a2525';
   document.getElementById('new-play-btn').style.background = '#2a1515';
-  updateHistory(); updateRoundDisplay(); updateHotNums();
 }
 
 function newPlay(){
