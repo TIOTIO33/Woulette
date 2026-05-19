@@ -125,13 +125,23 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
 
   <div id="panel-entry" class="panel active">
     <div class="entry-inner">
+      <div style="display:flex;gap:8px;flex-shrink:0;">
+        <button id="init-mode-btn" onclick="toggleInitMode()"
+          style="flex:1;height:44px;border-radius:10px;background:var(--bg3);color:var(--txt2);font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.08em;border:1.5px solid var(--border);cursor:pointer;transition:background 0.15s,color 0.15s,border-color 0.15s;">
+          ⚡ Init
+        </button>
+        <button id="mic-btn" onclick="toggleMic()"
+          style="height:44px;width:52px;border-radius:10px;background:var(--bg3);color:var(--txt2);font-size:22px;border:1.5px solid var(--border);cursor:pointer;transition:background 0.15s,color 0.15s,border-color 0.15s;flex-shrink:0;"
+          title="Dicter un numéro">🎤</button>
+      </div>
       <div class="zero-row">
         <button class="zero-btn" id="btn-0" onclick="selectNum(0)">0 — ZÉRO</button>
       </div>
       <div class="dozens-container" id="dozens-container"></div>
       <div class="sel-confirm">
         <div class="sel-display" id="sel-display"><span style="color:var(--txt3)">Aucun numéro sélectionné</span></div>
-        <button class="ok-btn" id="ok-btn" disabled onclick="submitTurn()">✓ Confirmer</button>
+        <div id="mic-transcript" style="display:none;font-size:12px;color:var(--txt3);text-align:center;min-height:16px;margin-top:-4px;"></div>
+        <button class="ok-btn" id="ok-btn" disabled>✓ Confirmer</button>
       </div>
       <div class="history-section">
         <div class="section-label">Derniers tours <span class="count-badge" id="history-count">0</span></div>
@@ -314,8 +324,17 @@ function buildGrid(){
   });
 }
 
-function selectNum(n){
-  if(selected!==null){const p=document.getElementById('btn-'+selected);if(p)p.classList.remove('selected');}
+function selectNum(n, fromMic){
+  if(initMode){
+    turns.push(n);
+    updateHistory(); updateHotNums();
+    setOkBtnRemoveMode(true);
+    const btn=document.getElementById('btn-'+n);
+    if(btn){ btn.classList.add('selected'); setTimeout(()=>btn.classList.remove('selected'),300); }
+    return;
+  }
+  // in normal mode: only deselect previous if user tapped (not mic)
+  if(!fromMic && selected!==null){const p=document.getElementById('btn-'+selected);if(p)p.classList.remove('selected');}
   selected=n;
   document.getElementById('btn-'+n).classList.add('selected');
   const bg=n===0?'var(--grn)':RED_NUMS.has(n)?'var(--red)':'#2a2a2a';
@@ -324,9 +343,62 @@ function selectNum(n){
   document.getElementById('ok-btn').disabled=false;
 }
 
+let initMode = false;
+
+function setOkBtnRemoveMode(on){
+  const okBtn = document.getElementById('ok-btn');
+  okBtn.disabled = false;
+  if(on){
+    okBtn.textContent = '✕ Supprimer dernier';
+    okBtn.style.background = '#3a1515';
+    okBtn.style.color = '#e05050';
+    okBtn.onclick = initDelete;
+  } else {
+    okBtn.textContent = '✓ Confirmer';
+    okBtn.style.background = '';
+    okBtn.style.color = '';
+    okBtn.onclick = submitTurn;
+    okBtn.disabled = selected === null;
+  }
+}
+
+function toggleInitMode(){
+  initMode = !initMode;
+  const btn = document.getElementById('init-mode-btn');
+  if(initMode){
+    btn.style.background = '#1a3a1a';
+    btn.style.color = '#1db954';
+    btn.style.borderColor = '#1db954';
+    btn.textContent = '✓ Fin Init';
+    // show remove btn only if there's something to remove
+    setOkBtnRemoveMode(turns.length > 0);
+  } else {
+    btn.style.background = 'var(--bg3)';
+    btn.style.color = 'var(--txt2)';
+    btn.style.borderColor = 'var(--border)';
+    btn.textContent = '⚡ Init';
+    setOkBtnRemoveMode(false);
+  }
+}
+
+function initDelete(){
+  if(!turns.length) return;
+  turns.pop();
+  // deselect current selection if any
+  if(selected!==null){
+    const p=document.getElementById('btn-'+selected); if(p)p.classList.remove('selected');
+    selected=null;
+    document.getElementById('sel-display').innerHTML='<span style="color:var(--txt3)">Aucun numéro sélectionné</span>';
+  }
+  updateHistory(); updateHotNums();
+  // if nothing left to delete, disable the remove btn
+  setOkBtnRemoveMode(turns.length > 0);
+}
+
 function submitTurn(){
   if(selected===null)return;
-  turns.push(selected); roundCounter++;
+  turns.push(selected);
+  if(!initMode) roundCounter++;
   document.getElementById('btn-'+selected).classList.remove('selected');
   selected=null;
   document.getElementById('sel-display').innerHTML='<span style="color:var(--txt3)">Aucun numéro sélectionné</span>';
@@ -420,7 +492,139 @@ function renderStats(){
     </div>`;
 }
 
+
+// ── MIC / SPEECH ──
+const WORD_MAP = {
+  zéro:0,zero:0,un:1,une:1,deux:2,trois:3,quatre:4,cinq:5,six:6,sept:7,huit:8,neuf:9,
+  dix:10,onze:11,douze:12,treize:13,quatorze:14,quinze:15,seize:16,
+  vingt:20,trente:30,quarante:40,cinquante:50,soixante:60,
+  septante:70,huitante:80,octante:80,nonante:90
+};
+function normalizeSpeech(p){
+  return p.toLowerCase()
+    .replace(/quatre[- ]vingt[- ]dix/g,'nonante')
+    .replace(/quatre[- ]vingts?/g,'huitante')
+    .replace(/soixante[- ]dix/g,'septante')
+    .replace(/[- ]+/g,' ').trim();
+}
+function wordsToNum(phrase){
+  const tokens=normalizeSpeech(phrase).split(' ');
+  let total=0,current=0,valid=false;
+  for(const t of tokens){
+    if(WORD_MAP[t]===undefined) continue;
+    valid=true; const v=WORD_MAP[t];
+    if(v>=100){current=current?current*v:v;}
+    else{current+=v;}
+  }
+  return valid?total+current:null;
+}
+function extractFirstNumber(text){
+  // try digit first
+  const dm=text.match(/\b(3[0-6]|[0-2]?[0-9])\b/);
+  if(dm) return parseInt(dm[1]);
+  // try word
+  const wordPat=/(?:(?:zéro|zero|un|une|deux|trois|quatre-vingt(?:-dix)?|quatre-vingts?|soixante-dix|soixante|cinq|six|sept|huit|neuf|dix|onze|douze|treize|quatorze|quinze|seize|vingt|trente)(?:[- ](?:et[- ])?)?)+/gi;
+  const wm=text.match(wordPat);
+  if(wm){for(const m of wm){const n=wordsToNum(m);if(n!==null&&n>=0&&n<=36)return n;}}
+  return null;
+}
+let micRec=null, micListening=false, micStopping=false;
+function initMicRec(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){alert('Web Speech API non supporté — utilisez Chrome ou Safari');return null;}
+  const r=new SR();
+  r.continuous=true; r.interimResults=true; r.lang='fr-FR';
+  r.onresult=e=>{
+    let interim='',final='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const t=e.results[i][0].transcript;
+      e.results[i].isFinal?(final+=t):(interim+=t);
+    }
+    const el=document.getElementById('mic-transcript');
+    if(el) el.textContent=final||interim;
+    if(final){
+      const lower=final.toLowerCase().trim();
+      const hasOk=!initMode && /\bok\b/.test(lower);
+      const n=extractFirstNumber(final);
+
+      if(n!==null&&n>=0&&n<=36){
+        if(initMode){
+          turns.push(n);
+          updateHistory(); updateHotNums();
+          setOkBtnRemoveMode(true);
+          if(el){ el.style.display='block'; el.textContent='✓ '+n; }
+        } else {
+          // select the number
+          if(selected!==null){const p=document.getElementById('btn-'+selected);if(p)p.classList.remove('selected');}
+          selected=n;
+          const numBtn=document.getElementById('btn-'+n);
+          if(numBtn) numBtn.classList.add('selected');
+          const bg=n===0?'var(--grn)':RED_NUMS.has(n)?'var(--red)':'#2a2a2a';
+          document.getElementById('sel-display').innerHTML=
+            `<span style="display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:middle;background:${bg}"></span>Sélectionné : <span class="sel-num">${n}</span> — ${colorLabel(n)}`;
+          document.getElementById('ok-btn').disabled=false;
+          if(hasOk){
+            // number + ok in same buffer: confirm immediately
+            submitTurn();
+            if(el){ el.style.display='block'; el.textContent='✓ '+n+' — Confirmé'; }
+          } else {
+            if(el){ el.style.display='block'; el.textContent='✓ '+n; }
+          }
+        }
+      } else if(hasOk && selected!==null){
+        // ok in its own buffer, number already selected
+        submitTurn();
+        if(el){ el.style.display='block'; el.textContent='✓ Confirmé'; }
+      } else {
+        if(el) el.textContent='Non reconnu : '+final;
+      }
+    }
+  };
+  r.onerror=e=>{
+    const el=document.getElementById('mic-transcript');
+    if(el) el.textContent='Erreur : '+e.error;
+    micStopping=true;
+    setMicIdle();
+  };
+  r.onend=()=>{
+    micStopping=false;
+    micListening=false;
+    setMicIdle();
+  };
+  return r;
+}
+function setMicIdle(){
+  micListening=false;
+  const btn=document.getElementById('mic-btn');
+  if(btn){btn.textContent='🎤';btn.style.background='var(--bg3)';btn.style.color='var(--txt2)';btn.style.borderColor='var(--border)';}
+}
+function stopMic(){
+  if(micStopping||!micListening) return;
+  micStopping=true;
+  micListening=false;
+  try{if(micRec)micRec.stop();}catch(e){}
+  setMicIdle();
+  const el=document.getElementById('mic-transcript');
+  if(el) el.style.display='none';
+}
+function toggleMic(){
+  if(micListening){stopMic();return;}
+  if(!micRec) micRec=initMicRec();
+  if(!micRec) return;
+  micStopping=false;
+  micListening=true;
+  const btn=document.getElementById('mic-btn');
+  btn.textContent='⏹'; btn.style.background='#1a2a3a'; btn.style.color='#4a9eff'; btn.style.borderColor='#4a9eff';
+  const el=document.getElementById('mic-transcript');
+  el.style.display='block'; el.textContent='En écoute…';
+  try{micRec.start();}catch(e){
+    micRec=initMicRec();
+    if(micRec){micStopping=false;micListening=true;micRec.start();}
+  }
+}
+
 buildGrid(); updateHistory(); updateRoundDisplay(); updateHotNums();
+document.getElementById('ok-btn').onclick = submitTurn;
 
 // ── OPT TAB ──
 let optChart = null;
