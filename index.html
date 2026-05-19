@@ -125,6 +125,15 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
 
   <div id="panel-entry" class="panel active">
     <div class="entry-inner">
+      <div style="display:flex;gap:8px;flex-shrink:0;margin-bottom:0;">
+        <button id="new-play-btn" onclick="newPlay()"
+          style="flex:1;height:40px;border-radius:10px;background:var(--bg3);color:var(--txt2);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.08em;border:1.5px solid var(--border);cursor:pointer;transition:background 0.15s,color 0.15s;">
+          ＋ Nouvelle partie
+        </button>
+        <div id="play-badge" style="display:none;align-items:center;padding:0 12px;background:#1a2a1a;border:1.5px solid #2a5a2a;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:16px;color:#1db954;white-space:nowrap;">
+          ▶ PARTIE EN COURS
+        </div>
+      </div>
       <div style="display:flex;gap:8px;flex-shrink:0;">
         <button id="init-mode-btn" onclick="toggleInitMode()"
           style="flex:1;height:44px;border-radius:10px;background:var(--bg3);color:var(--txt2);font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.08em;border:1.5px solid var(--border);cursor:pointer;transition:background 0.15s,color 0.15s,border-color 0.15s;">
@@ -390,7 +399,7 @@ function initDelete(){
     selected=null;
     document.getElementById('sel-display').innerHTML='<span style="color:var(--txt3)">Aucun numéro sélectionné</span>';
   }
-  updateHistory(); updateHotNums();
+  updateHistory(); updateHotNums(); saveState();
   // if nothing left to delete, disable the remove btn
   setOkBtnRemoveMode(turns.length > 0);
 }
@@ -403,7 +412,7 @@ function submitTurn(){
   selected=null;
   document.getElementById('sel-display').innerHTML='<span style="color:var(--txt3)">Aucun numéro sélectionné</span>';
   document.getElementById('ok-btn').disabled=true;
-  updateHistory(); updateRoundDisplay(); updateHotNums();
+  updateHistory(); updateRoundDisplay(); updateHotNums(); saveState();
 }
 
 function updateHistory(){
@@ -623,8 +632,123 @@ function toggleMic(){
   }
 }
 
+
+// ── INDEXEDDB PERSISTENCE ──
+const DB_NAME = 'roulette_app', DB_VER = 1, STORE = 'state';
+let db = null;
+
+function openDB(cb){
+  if(db){ cb(db); return; }
+  const req = indexedDB.open(DB_NAME, DB_VER);
+  req.onupgradeneeded = e => e.target.result.createObjectStore(STORE);
+  req.onsuccess = e => { db = e.target.result; cb(db); };
+  req.onerror = () => console.warn('IndexedDB unavailable');
+}
+
+function saveState(){
+  openDB(db => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).put({
+      turns, roundCounter, playActive: document.getElementById('play-badge').style.display !== 'none'
+    }, 'current');
+  });
+}
+
+function saveOptState(){
+  openDB(db => {
+    const gain    = document.getElementById('o-gain')   ? document.getElementById('o-gain').value   : 2;
+    const factor  = document.getElementById('o-factor') ? document.getElementById('o-factor').value : 2;
+    const freq    = document.getElementById('o-freq')   ? document.getElementById('o-freq').value   : 4;
+    const init    = document.getElementById('o-init')   ? document.getElementById('o-init').value   : 1;
+    const minbet  = document.getElementById('o-minbet') ? document.getElementById('o-minbet').value : 0.2;
+    const maxcap  = document.getElementById('o-maxcap') ? document.getElementById('o-maxcap').value : '';
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).put({ gain, factor, freq, init, minbet, maxcap }, 'opt');
+  });
+}
+
+function loadOptState(cb){
+  openDB(db => {
+    const req = db.transaction(STORE).objectStore(STORE).get('opt');
+    req.onsuccess = e => cb(e.target.result || null);
+    req.onerror   = () => cb(null);
+  });
+}
+
+function applyOptState(s){
+  if(!s) return;
+  const set = (id, val) => { const el=document.getElementById(id); if(el && val!==undefined && val!=='') el.value=val; };
+  set('o-gain',   s.gain);
+  set('o-factor', s.factor);
+  set('o-freq',   s.freq);
+  set('o-minbet', s.minbet);
+  set('o-maxcap', s.maxcap);
+  // o-init will be clamped by renderOpt
+  set('o-init',   s.init);
+}
+
+function loadState(cb){
+  openDB(db => {
+    const req = db.transaction(STORE).objectStore(STORE).get('current');
+    req.onsuccess = e => cb(e.target.result || null);
+    req.onerror   = () => cb(null);
+  });
+}
+
+function applyState(s){
+  if(!s || !s.playActive) return;
+  turns.length = 0;
+  if(s.turns) turns.push(...s.turns);
+  roundCounter = s.roundCounter || 1;
+  // show badge
+  const badge = document.getElementById('play-badge');
+  badge.style.display = 'flex';
+  document.getElementById('new-play-btn').textContent = '■ Fin de partie';
+  document.getElementById('new-play-btn').style.color = '#e05050';
+  document.getElementById('new-play-btn').style.borderColor = '#6a2525';
+  document.getElementById('new-play-btn').style.background = '#2a1515';
+  updateHistory(); updateRoundDisplay(); updateHotNums();
+}
+
+function newPlay(){
+  const badge = document.getElementById('play-badge');
+  const btn   = document.getElementById('new-play-btn');
+  const active = badge.style.display !== 'none';
+  if(!active){
+    // start new play: reset everything
+    turns.length = 0;
+    roundCounter = 1;
+    selected = null;
+    document.getElementById('sel-display').innerHTML = '<span style="color:var(--txt3)">Aucun numéro sélectionné</span>';
+    document.getElementById('ok-btn').disabled = true;
+    document.getElementById('ok-btn').textContent = '✓ Confirmer';
+    document.getElementById('ok-btn').style.background = '';
+    document.getElementById('ok-btn').style.color = '';
+    document.getElementById('ok-btn').onclick = submitTurn;
+    if(initMode) toggleInitMode();
+    badge.style.display = 'flex';
+    btn.textContent = '■ Fin de partie';
+    btn.style.color = '#e05050';
+    btn.style.borderColor = '#6a2525';
+    btn.style.background = '#2a1515';
+    updateHistory(); updateRoundDisplay(); updateHotNums();
+    saveState();
+  } else {
+    // end play
+    badge.style.display = 'none';
+    btn.textContent = '＋ Nouvelle partie';
+    btn.style.color = 'var(--txt2)';
+    btn.style.borderColor = 'var(--border)';
+    btn.style.background = 'var(--bg3)';
+    // clear persisted state
+    openDB(db => db.transaction(STORE,'readwrite').objectStore(STORE).delete('current'));
+  }
+}
+
 buildGrid(); updateHistory(); updateRoundDisplay(); updateHotNums();
 document.getElementById('ok-btn').onclick = submitTurn;
+loadState(applyState);
+loadOptState(s => { applyOptState(s); });
 
 // ── OPT TAB ──
 let optChart = null;
@@ -821,6 +945,7 @@ function renderOpt(){
   } else {
     ruinEl.textContent = '';
   }
+  saveOptState();
 }
 
 </script>
