@@ -430,15 +430,20 @@ function renderOpt(){
   const gain   = parseFloat(document.getElementById('o-gain').value);
   const factor = parseFloat(document.getElementById('o-factor').value);
   const freq   = parseInt(document.getElementById('o-freq').value);
-  const init   = parseFloat(document.getElementById('o-init').value);
   const minBet = getMinBet();
 
   updateRoundDisplay();
   document.getElementById('o-gain-v').textContent   = gain + '×';
   document.getElementById('o-factor-v').textContent  = factor.toFixed(1);
   document.getElementById('o-freq-v').textContent    = freq;
-  document.getElementById('o-init-v').textContent    = init.toFixed(2);
   document.getElementById('o-minbet-v').textContent  = minBet.toFixed(2);
+  // keep mise initiale slider min in sync with minBet
+  const initSlider = document.getElementById('o-init');
+  initSlider.min = minBet;
+  initSlider.step = minBet;
+  if(parseFloat(initSlider.value) < minBet){ initSlider.value = minBet; }
+  document.getElementById('o-init-v').textContent = parseFloat(initSlider.value).toFixed(2);
+  const init = parseFloat(initSlider.value);
 
   function betAt(r) {
     const s = Math.floor((r - 1) / freq);
