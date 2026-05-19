@@ -327,7 +327,7 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
 
     <!-- Modal header -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;">
-      <span style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:0.08em;color:var(--txt)">⚙ Optimiseur CMA-ES</span>
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:0.08em;color:var(--txt)">⚙ Optimiseur Grille</span>
       <button onclick="closeOptimizer()" style="background:none;border:none;color:var(--txt2);font-size:22px;cursor:pointer;line-height:1;">✕</button>
     </div>
 
@@ -369,22 +369,13 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
 
 
 
-      <!-- Survival weight -->
+      <!-- Objective -->
       <div style="background:var(--bg3);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;">
         <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px">Fonction objectif</div>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="font-size:12px;color:var(--txt2);min-width:130px">λ Survie</span>
-          <input type="range" id="cma-w-survival" min="0" max="5" step="0.1" value="1"
-            oninput="document.getElementById('cma-w-survival-v').textContent=parseFloat(this.value).toFixed(1)"
-            style="flex:1">
-          <span style="font-size:12px;font-weight:600;min-width:28px;text-align:right" id="cma-w-survival-v">1.0</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="font-size:12px;color:var(--txt2);min-width:130px">α Perte (aversion)</span>
-          <input type="range" id="cma-w-alpha" min="1" max="10" step="0.1" value="2"
-            oninput="document.getElementById('cma-w-alpha-v').textContent=parseFloat(this.value).toFixed(1)"
-            style="flex:1">
-          <span style="font-size:12px;font-weight:600;min-width:28px;text-align:right" id="cma-w-alpha-v">2.0</span>
+        <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px">Objectif</div>
+        <div style="font-size:12px;color:var(--txt2);line-height:1.6;">
+          1. Pire gain &gt; 0<br>
+          2. Taux de survie maximal (rounds sans ruine / N)
         </div>
       </div>
 
@@ -393,7 +384,7 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
     </div>
 
     <!-- Results tab -->
-    <div id="modal-panel-results" style="display:none;flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;">
+    <div id="modal-panel-results" style="display:none;flex:1;overflow-y:auto;padding:14px 16px;flex-direction:column;gap:10px;">
       <!-- Progress -->
       <div style="background:var(--bg3);border-radius:10px;padding:12px 14px;">
         <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
@@ -829,8 +820,7 @@ function saveOptimizerState(){
       capital:    get('cma-capital'),
       rounds:     get('cma-rounds'),
       gens:       get('cma-gens'),
-      wSurvival:  get('cma-w-survival'),
-      wAlpha:     get('cma-w-alpha'),
+
     };
     // param rows (checked, min, max, step, defval)
     state.params = {};
@@ -862,10 +852,9 @@ function applyOptimizerState(s){
   set('cma-capital',    s.capital);
   set('cma-rounds',     s.rounds);
   set('cma-gens',       s.gens);
-  set('cma-w-survival', s.wSurvival);
-  if(s.wSurvival) document.getElementById('cma-w-survival-v').textContent = parseFloat(s.wSurvival).toFixed(1);
-  set('cma-w-alpha', s.wAlpha);
-  if(s.wAlpha) document.getElementById('cma-w-alpha-v').textContent = parseFloat(s.wAlpha).toFixed(1);
+
+
+
   if(s.params){
     ['gain','factor','freq','init','minbet'].forEach(id => {
       const p = s.params[id]; if(!p) return;
@@ -1204,8 +1193,7 @@ function runOptimizer(){
   const capital  = parseFloat(document.getElementById('cma-capital').value) || Infinity;
   const rounds   = parseInt(document.getElementById('cma-rounds').value)    || 100;
   const maxGens       = parseInt(document.getElementById('cma-gens').value)       || 100;
-  const lambdaSurvival = parseFloat(document.getElementById('cma-w-survival').value) || 1;
-  const alpha          = parseFloat(document.getElementById('cma-w-alpha').value)    || 2;
+
 
   const activeParams = CMA_PARAMS.filter(p => document.getElementById('cma-check-'+p.id).checked)
     .map(p => ({
@@ -1230,146 +1218,63 @@ const betAt = (r, init, factor, freq, minbet) => {
   return Math.ceil(raw / minbet) * minbet;
 };
 
-function evaluate(params, capital, rounds, lambdaSurvival, alpha){
-  const {gain, factor, freq, init, minbet, p} = params;
-  let score = 0;
+function evaluate(params, capital, rounds){
+  const {gain, factor, freq, init, minbet} = params;
   let cumCost = 0;
-  let rBust = rounds;
+  let worstNet = Infinity;
+  let survivalRounds = 0;
   for(let r = 1; r <= rounds; r++){
     const bet = betAt(r, init, factor, freq, minbet);
     cumCost += bet;
-    if(capital < Infinity && cumCost > capital){ rBust = r - 1; break; }
-    const netGain = gain * bet - cumCost;
-    const pWinAtR = p * Math.pow(1 - p, r - 1);
-    const utility = netGain > 0
-      ? Math.log(1 + netGain)
-      : -alpha * Math.log(1 - netGain + 1);
-    score += utility * pWinAtR;
+    const netIfWin = gain * bet - cumCost;
+    if(netIfWin < worstNet) worstNet = netIfWin;
+    if(capital < Infinity && cumCost > capital) break;
+    survivalRounds = r;
   }
-  score += lambdaSurvival * (rBust / rounds);
-  return score;
+  // step 1: binary filter
+  if(worstNet <= 0) return -1;
+  // step 2: classify by survival ratio
+  return survivalRounds / rounds;
 }
 
-function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
-
 self.onmessage = function(e){
-  const {activeParams, fixedParams, capital, rounds, maxGens, pWin, lambdaSurvival, alpha} = e.data;
-  const n = activeParams.length;
-  if(n === 0){ self.postMessage({type:'done', results:[]}); return; }
+  const {activeParams, fixedParams, capital, rounds, maxGens} = e.data;
+  const axes = activeParams.map(p => {
+    const steps = Math.round((p.max - p.min) / p.step);
+    return Array.from({length: steps + 1}, (_, i) => +(p.min + i * p.step).toFixed(6));
+  });
 
-  // CMA-ES setup
-  const lambda = 4 + Math.floor(3 * Math.log(n));
-  const mu = Math.floor(lambda / 2);
-  const weights = Array.from({length: mu}, (_,i) => Math.log(mu + 0.5) - Math.log(i+1));
-  const wSum = weights.reduce((a,b)=>a+b,0);
-  const wNorm = weights.map(w => w/wSum);
-  const muEff = 1 / wNorm.reduce((a,w)=>a+w*w,0);
-
-  const cc = (4+muEff/n)/(n+4+2*muEff/n);
-  const cs = (muEff+2)/(n+muEff+5);
-  const c1 = 2/((n+1.3)**2+muEff);
-  const cmu = Math.min(1-c1, 2*(muEff-2+1/muEff)/((n+2)**2+muEff));
-  const damps = 1+2*Math.max(0,Math.sqrt((muEff-1)/(n+1))-1)+cs;
-  const chiN = Math.sqrt(n)*(1-1/(4*n)+1/(21*n*n));
-
-  // init mean at midpoint of ranges
-  let mean = activeParams.map(p => (p.min+p.max)/2);
-  let sigma = 0.3;
-  let pc = Array(n).fill(0);
-  let ps = Array(n).fill(0);
-  let C = Array.from({length:n}, (_,i) => Array.from({length:n}, (_,j) => i===j?1:0));
-  let eigenvalues = Array(n).fill(1);
-  let eigenvectors = Array.from({length:n}, (_,i)=>Array.from({length:n},(_,j)=>i===j?1:0));
-  let eigenUpdateCount = 0;
-
-  const allResults = [];
-  let bestScore = -Infinity, bestParams = null;
-
-  for(let gen = 0; gen < maxGens; gen++){
-    // sample lambda candidates
-    const candidates = [];
-    for(let k = 0; k < lambda; k++){
-      // sample from N(0,C) using eigendecomposition
-      const z = Array.from({length:n}, ()=>{
-        let u=0; for(let i=0;i<6;i++) u+=Math.random(); return u-3;
-      });
-      const y = Array(n).fill(0);
-      for(let i=0;i<n;i++) for(let j=0;j<n;j++) y[i] += eigenvectors[i][j] * Math.sqrt(Math.max(0,eigenvalues[j])) * z[j];
-      const x = mean.map((m,i) => m + sigma * y[i]);
-      candidates.push({x, y, z});
-    }
-
-    // evaluate
-    const scored = candidates.map(c => {
-      const xClamped = c.x.map((v,i) => clamp(v, activeParams[i].min, activeParams[i].max));
-      const params = {...fixedParams, p: pWin};
-      activeParams.forEach((p,i) => params[p.id] = xClamped[i]);
-      const score = evaluate(params, capital, rounds, lambdaSurvival, alpha);
-      return {x: xClamped, y: c.y, score};
-    }).sort((a,b) => b.score - a.score);
-
-    // update mean
-    const oldMean = [...mean];
-    mean = Array(n).fill(0);
-    for(let i=0;i<mu;i++) for(let j=0;j<n;j++) mean[j] += wNorm[i]*scored[i].x[j];
-
-    // step-size control
-    const meany = Array(n).fill(0);
-    for(let i=0;i<mu;i++) for(let j=0;j<n;j++) meany[j] += wNorm[i]*scored[i].y[j];
-    const invsqrtC_meany = Array(n).fill(0);
-    for(let i=0;i<n;i++) for(let j=0;j<n;j++) invsqrtC_meany[i] += eigenvectors[i][j]*(1/Math.sqrt(Math.max(1e-10,eigenvalues[j])))*meany[j];
-    ps = ps.map((v,i) => (1-cs)*v + Math.sqrt(cs*(2-cs)*muEff)*invsqrtC_meany[i]);
-    const psNorm = Math.sqrt(ps.reduce((a,v)=>a+v*v,0));
-    sigma *= Math.exp((cs/damps)*(psNorm/chiN-1));
-
-    // covariance update
-    const hsig = psNorm/Math.sqrt(1-Math.pow(1-cs,2*(gen+1)))/chiN < 1.4+2/(n+1) ? 1 : 0;
-    pc = pc.map((v,i) => (1-cc)*v + hsig*Math.sqrt(cc*(2-cc)*muEff)*meany[i]);
-    for(let i=0;i<n;i++) for(let j=0;j<n;j++){
-      let rankOne = pc[i]*pc[j];
-      let rankMu = 0;
-      for(let k=0;k<mu;k++) rankMu += wNorm[k]*scored[k].y[i]*scored[k].y[j];
-      C[i][j] = (1-c1-cmu)*C[i][j] + c1*(rankOne+(1-hsig)*cc*(2-cc)*C[i][j]) + cmu*rankMu;
-    }
-
-    // re-eigendecompose every 10 gens (cheap for small n)
-    eigenUpdateCount++;
-    if(eigenUpdateCount % 10 === 0){
-      // simple Jacobi for small matrices
-      let A = C.map(row=>[...row]);
-      let V = Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>i===j?1:0));
-      for(let sweep=0;sweep<20;sweep++){
-        for(let p2=0;p2<n-1;p2++) for(let q=p2+1;q<n;q++){
-          const apq=A[p2][q];
-          if(Math.abs(apq)<1e-10) continue;
-          const tau=(A[q][q]-A[p2][p2])/(2*apq);
-          const t=Math.sign(tau)/(Math.abs(tau)+Math.sqrt(1+tau*tau));
-          const c2=1/Math.sqrt(1+t*t), s2=t*c2;
-          for(let r=0;r<n;r++){const ap=A[r][p2],aq=A[r][q];A[r][p2]=c2*ap-s2*aq;A[r][q]=s2*ap+c2*aq;}
-          for(let r=0;r<n;r++){const ap=A[p2][r],aq=A[q][r];A[p2][r]=c2*ap-s2*aq;A[q][r]=s2*ap+c2*aq;}
-          for(let r=0;r<n;r++){const vp=V[r][p2],vq=V[r][q];V[r][p2]=c2*vp-s2*vq;V[r][q]=s2*vp+c2*vq;}
-        }
-      }
-      eigenvalues = Array.from({length:n},(_,i)=>A[i][i]);
-      eigenvectors = V;
-    }
-
-    // track best
-    if(scored[0].score > bestScore){
-      bestScore = scored[0].score;
-      bestParams = {...scored[0].x};
-    }
-
-    // record top result this gen
-    const topParams = {};
-    activeParams.forEach((p,i) => topParams[p.id] = +scored[0].x[i].toFixed(3));
-    Object.assign(topParams, fixedParams);
-    allResults.push({gen: gen+1, score: +scored[0].score.toFixed(4), params: topParams});
-
-    self.postMessage({type:'progress', gen: gen+1, maxGens, bestScore: +bestScore.toFixed(4),
-      topParams: topParams, topScore: +scored[0].score.toFixed(4)});
+  function* cartesian(arrays, idx, current){
+    if(idx === arrays.length){ yield [...current]; return; }
+    for(const v of arrays[idx]){ current[idx] = v; yield* cartesian(arrays, idx+1, current); }
   }
-  self.postMessage({type:'done', results: allResults});
+
+  let bestScore = -Infinity, bestParams = null;
+  let evaluated = 0;
+  const total = axes.reduce((a, ax) => a * ax.length, 1);
+  const reportEvery = Math.max(1, Math.floor(total / 100));
+
+  for(const combo of cartesian(axes, 0, new Array(activeParams.length))){
+    const params = {...fixedParams};
+    activeParams.forEach((p, i) => params[p.id] = combo[i]);
+    const score = evaluate(params, capital, rounds);
+    evaluated++;
+    if(score > bestScore){ bestScore = score; bestParams = {...params}; }
+    if(evaluated % reportEvery === 0 || evaluated === total){
+      const gen = Math.round(evaluated / total * 100);
+      if(bestScore > 0 && bestParams){
+        const topParams = {};
+        activeParams.forEach(p => topParams[p.id] = +bestParams[p.id].toFixed(3));
+        Object.assign(topParams, fixedParams);
+        self.postMessage({type:'progress', gen, maxGens, bestScore: +bestScore.toFixed(4),
+          topParams, topScore: +bestScore.toFixed(4), feasible: true});
+      } else {
+        self.postMessage({type:'progress', gen, maxGens, bestScore: -1,
+          topParams: null, topScore: null, feasible: false});
+      }
+    }
+  }
+  self.postMessage({type:'done', results:[]});
 };
 `;
 
@@ -1382,7 +1287,7 @@ self.onmessage = function(e){
     return Math.min(picked, total-1) / total;
   })();
 
-  optimizerWorker.postMessage({activeParams, fixedParams, capital, rounds, maxGens, pWin, lambdaSurvival, alpha});
+  optimizerWorker.postMessage({activeParams, fixedParams, capital, rounds, maxGens, pWin});
 
   optimizerWorker.onmessage = e => {
     const d = e.data;
@@ -1392,9 +1297,8 @@ self.onmessage = function(e){
       document.getElementById('cma-status').textContent = 'Optimisation en cours…';
       document.getElementById('cma-gen-label').textContent = 'Gén. ' + d.gen + ' / ' + d.maxGens;
       document.getElementById('cma-best-score').textContent = 'Score meilleur : ' + d.bestScore;
-      // add result card every 5 gens or first
-      if(d.gen === 1 || d.gen % 5 === 0){
-        addResultCard(d.gen, d.topScore || d.bestScore, d.topParams, activeParams, fixedParams);
+      if(d.feasible && d.topParams){
+        addResultCard(d.gen, d.topScore, d.topParams, activeParams, fixedParams);
       }
     } else if(d.type === 'done'){
       document.getElementById('cma-status').textContent = '✓ Terminé';
@@ -1433,6 +1337,8 @@ function addResultCard(gen, score, params, activeParams, fixedParams){
 }
 
 function applyOptimizerResult(params, activeParams, fixedParams){
+  if(!params || !activeParams) return;
+  fixedParams = fixedParams || {};
   const map = {gain:'o-gain', factor:'o-factor', freq:'o-freq', init:'o-init', minbet:'o-minbet'};
   // sync rounds and capital
   const cmaRounds = document.getElementById('cma-rounds');
@@ -1493,25 +1399,21 @@ function renderOpt(){
   const N = parseInt(document.getElementById('o-rounds').value) || 100;
   document.getElementById('o-rounds-v').textContent = N;
   const labels = [], netGains = [];
-  let totalCost = 0;
+  let totalCost = 0, cumLost = 0;
   let bestGain = -Infinity, worstGain = Infinity, breakEven = null;
 
   for(let r = 1; r <= N; r++){
     const bet = betAt(r);
-
-    // cumulative cost of rounds 1..r-1 (losses)
-    let cumLost = 0;
-    for(let i = 1; i < r; i++) cumLost += betAt(i);
-
-    // net gain if win at round r = payout - bet - cumLost
-    const net = gain * bet - bet - cumLost;
+    // net gain if win at round r = gain*bet - cumCost(r)
+    // cumCost(r) = cumCost(r-1) + bet(r), maintained as running sum
+    const net = gain * bet - (cumLost + bet);
     labels.push(r);
     netGains.push(parseFloat(net.toFixed(4)));
-
     if(net > bestGain) bestGain = net;
     if(net < worstGain) worstGain = net;
     if(breakEven === null && net >= 0) breakEven = r;
-    if(r === N) totalCost = cumLost + bet;
+    cumLost += bet;
+    if(r === N) totalCost = cumLost;
   }
 
   document.getElementById('o-best').textContent  = bestGain === -Infinity ? '—' : bestGain.toFixed(2);
