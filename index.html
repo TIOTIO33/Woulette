@@ -61,6 +61,8 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
 .hist-chip.red { background: var(--red); color: #fff; }
 .hist-chip.blk { background: #2a2a2a; color: #fff; outline: 1px solid #555; }
 .hist-chip.grn { background: var(--grn); color: #fff; }
+/* multi-number group chip in history */
+.hist-group { display: flex; gap: 2px; align-items: center; flex-shrink: 0; border: 1px solid var(--border); border-radius: 8px; padding: 2px 3px; background: var(--bg2); }
 .round-counter-section { flex-shrink: 0; background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .round-left { display: flex; flex-direction: column; gap: 2px; }
 .round-label { font-size: 11px; color: var(--txt3); text-transform: uppercase; letter-spacing: 0.08em; }
@@ -111,6 +113,11 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
 .play-no-signal { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--txt3); letter-spacing: 0.1em; }
 .play-dozen-badge { display: block; padding: 14px 20px; border-radius: 12px; background: var(--bg3); border: 1px solid var(--border); font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 0.06em; color: var(--txt); text-align: center; width: 100%; }
 .play-empty { font-size: 16px; color: var(--txt2); text-align: center; margin: auto; padding: 2rem 0; }
+/* multi-select count pill */
+.sel-count-pill { display: inline-flex; align-items: center; gap: 6px; background: var(--bg3); border: 1.5px solid var(--border); border-radius: 20px; padding: 3px 12px; font-size: 13px; color: var(--txt2); }
+.sel-count-pill .pill-num { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--gold); }
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
@@ -123,8 +130,10 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
     <button class="tab" onclick="switchTab('opt')">Opt</button>
   </div>
 
+  <!-- ══════════════════ ENTRY ══════════════════ -->
   <div id="panel-entry" class="panel active">
     <div class="entry-inner">
+      <!-- top row: Nouvelle partie + badge -->
       <div style="display:flex;gap:8px;flex-shrink:0;margin-bottom:0;">
         <button id="new-play-btn" onclick="newPlay()"
           style="flex:1;height:40px;border-radius:10px;background:var(--bg3);color:var(--txt2);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.08em;border:1.5px solid var(--border);cursor:pointer;transition:background 0.15s,color 0.15s;">
@@ -134,6 +143,7 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
           ▶ PARTIE EN COURS
         </div>
       </div>
+      <!-- Init + Mic -->
       <div style="display:flex;gap:8px;flex-shrink:0;">
         <button id="init-mode-btn" onclick="toggleInitMode()"
           style="flex:1;height:44px;border-radius:10px;background:var(--bg3);color:var(--txt2);font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.08em;border:1.5px solid var(--border);cursor:pointer;transition:background 0.15s,color 0.15s,border-color 0.15s;">
@@ -143,19 +153,32 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
           style="height:44px;width:52px;border-radius:10px;background:var(--bg3);color:var(--txt2);font-size:22px;border:1.5px solid var(--border);cursor:pointer;transition:background 0.15s,color 0.15s,border-color 0.15s;flex-shrink:0;"
           title="Dicter un numéro">🎤</button>
       </div>
+
+      <!-- ZERO -->
       <div class="zero-row">
         <button class="zero-btn" id="btn-0" onclick="selectNum(0)">0 — ZÉRO</button>
       </div>
+
+      <!-- NUMBER GRID -->
       <div class="dozens-container" id="dozens-container"></div>
+
+      <!-- SELECTION DISPLAY + CONFIRM -->
       <div class="sel-confirm">
-        <div class="sel-display" id="sel-display"><span style="color:var(--txt3)">Aucun numéro sélectionné</span></div>
+        <!-- shows selected set + count vs limit -->
+        <div id="sel-display" style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;min-height:30px;">
+          <span style="color:var(--txt3);font-size:14px">Aucun numéro sélectionné</span>
+        </div>
         <div id="mic-transcript" style="display:none;font-size:12px;color:var(--txt3);text-align:center;min-height:16px;margin-top:-4px;"></div>
-        <button class="ok-btn" id="ok-btn" disabled>✓ Confirmer</button>
+        <button class="ok-btn" id="ok-btn" disabled>✓ Confirmer le tour</button>
       </div>
+
+      <!-- HISTORY -->
       <div class="history-section">
         <div class="section-label">Derniers tours <span class="count-badge" id="history-count">0</span></div>
         <div class="history-row" id="history-row"><span style="color:var(--txt3);font-size:13px">Aucun tour</span></div>
       </div>
+
+      <!-- ROUND COUNTER -->
       <div class="round-counter-section">
         <div class="round-left" style="flex:1">
           <div class="round-label">Tour n°</div>
@@ -165,26 +188,45 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
               <span style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.07em">Mise ×</span>
               <span id="round-cycle" style="font-family:'Bebas Neue',sans-serif;font-size:42px;line-height:1;color:var(--gold)">1.0</span>
             </div>
+            <!-- Total stake indicator -->
+            <div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+              <span style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.07em">Mise tot.</span>
+              <span id="round-total-stake" style="font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;color:var(--txt2)">1.0</span>
+            </div>
           </div>
           <div class="round-next" id="round-next"></div>
         </div>
         <button class="round-reset-btn" onclick="resetRoundCounter()">↺ Reset</button>
       </div>
+
+      <!-- HOT SECTION -->
       <div class="hot-section">
-        <div class="hot-title">Numéros chauds <span class="count-badge" id="hot-count">0 / 30 tours</span></div>
+        <div class="hot-title" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+          <span>Numéros chauds</span>
+          <span class="count-badge" id="hot-count">0 tours</span>
+          <label style="display:flex;align-items:center;gap:5px;margin-left:auto;font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.07em;cursor:default;">
+            Fenêtre
+            <input type="number" id="hot-window" min="1" max="500" step="1" value="30"
+              oninput="updateHotNums()"
+              style="width:54px;background:var(--bg3);border:1.5px solid var(--border);border-radius:7px;color:var(--txt);font-family:'Bebas Neue',sans-serif;font-size:17px;text-align:center;padding:2px 5px;outline:none;">
+          </label>
+        </div>
         <div class="hot-nums" id="hot-nums"><span class="hot-empty">Pas assez de données</span></div>
       </div>
     </div>
   </div>
 
+  <!-- ══════════════════ STATS ══════════════════ -->
   <div id="panel-stats" class="panel">
     <div class="stats-inner" id="stats-content"></div>
   </div>
 
+  <!-- ══════════════════ PLAY ══════════════════ -->
   <div id="panel-play" class="panel">
     <div class="play-inner" id="play-content"></div>
   </div>
 
+  <!-- ══════════════════ OPT ══════════════════ -->
   <div id="panel-opt" class="panel">
     <div style="padding:14px 12px;display:flex;flex-direction:column;gap:12px;flex:1;min-height:0;">
 
@@ -227,16 +269,25 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
             style="flex:1;background:var(--bg3);border:1.5px solid var(--border);border-radius:7px;color:var(--txt);font-family:'Bebas Neue',sans-serif;font-size:18px;text-align:center;padding:5px 8px;outline:none;-moz-appearance:textfield;">
           <span style="font-size:13px;font-weight:600;min-width:36px;text-align:right" id="o-minbet-v">0.20</span>
         </div>
+
+        <!-- NEW: Numéros joués par tour -->
+        <div style="display:flex;align-items:center;gap:10px;border-top:1px solid var(--border);padding-top:10px;margin-top:2px;">
+          <span style="font-size:12px;color:var(--txt2);min-width:150px">Numéros / tour</span>
+          <input type="range" id="o-nums" min="1" max="18" step="1" value="1" oninput="renderOpt()" style="flex:1">
+          <span style="font-size:13px;font-weight:600;min-width:36px;text-align:right" id="o-nums-v">1</span>
+        </div>
+        <!-- stake info -->
+        <div id="o-stake-info" style="font-size:11px;color:var(--txt3);text-align:center;margin-top:-4px;"></div>
       </div>
 
       <!-- Stats row -->
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;" id="o-stats">
         <div style="background:var(--bg2);border-radius:10px;padding:10px 12px;">
-          <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Meilleur gain</div>
+          <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Meilleur gain net</div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:#1db954" id="o-best">—</div>
         </div>
         <div style="background:var(--bg2);border-radius:10px;padding:10px 12px;">
-          <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Pire gain</div>
+          <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Pire gain net</div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--red)" id="o-worst">—</div>
         </div>
         <div style="background:var(--bg2);border-radius:10px;padding:10px 12px;">
@@ -249,13 +300,15 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
         </div>
       </div>
 
-      <!-- Chart -->
+      <!-- Chart 1: Net gain per round -->
       <div style="background:var(--bg2);border-radius:12px;padding:12px 12px 14px;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px;">Gain net si gagné au tour N</div>
         <div style="position:relative;height:220px;width:100%;">
           <canvas id="o-chart"></canvas>
         </div>
       </div>
 
+      <!-- Chart 2: Cumulative cost -->
       <div style="background:var(--bg2);border-radius:12px;padding:12px 12px 14px;display:flex;flex-direction:column;gap:8px;">
         <div style="display:flex;align-items:center;justify-content:space-between;">
           <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em">Mise engagée cumulée (toutes pertes)</div>
@@ -307,6 +360,15 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
             <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Gain moy.</div>
             <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--txt)" id="mc-avgnet">—</div>
           </div>
+          <!-- NEW MC stats -->
+          <div style="background:var(--bg3);border-radius:10px;padding:10px 8px;text-align:center;">
+            <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Coût moy/round</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--txt2)" id="mc-avgcost">—</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:10px;padding:10px 8px;text-align:center;">
+            <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">P(ruine)</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--red)" id="mc-pruin">—</div>
+          </div>
         </div>
 
         <!-- curves -->
@@ -324,23 +386,15 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
 <!-- OPTIMIZER MODAL -->
 <div id="opt-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;flex-direction:column;align-items:center;justify-content:flex-start;padding:16px;">
   <div style="background:var(--bg2);border-radius:16px;width:100%;max-width:460px;display:flex;flex-direction:column;max-height:90dvh;overflow:hidden;">
-
-    <!-- Modal header -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;">
       <span style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:0.08em;color:var(--txt)">⚙ Optimiseur Grille</span>
       <button onclick="closeOptimizer()" style="background:none;border:none;color:var(--txt2);font-size:22px;cursor:pointer;line-height:1;">✕</button>
     </div>
-
-    <!-- Modal tabs -->
     <div style="display:flex;border-bottom:1px solid var(--border);flex-shrink:0;">
       <button id="modal-tab-params" onclick="switchModalTab('params')" style="flex:1;padding:10px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.07em;border:none;background:transparent;color:var(--gold);border-bottom:3px solid var(--gold);cursor:pointer;">Paramètres</button>
       <button id="modal-tab-results" onclick="switchModalTab('results')" style="flex:1;padding:10px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.07em;border:none;background:transparent;color:var(--txt3);border-bottom:3px solid transparent;cursor:pointer;">Résultats</button>
     </div>
-
-    <!-- Params tab -->
     <div id="modal-panel-params" style="flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px;">
-
-      <!-- Fixed inputs -->
       <div style="background:var(--bg3);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;">
         <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px">Contraintes fixes</div>
         <div style="display:flex;align-items:center;gap:10px;">
@@ -353,39 +407,26 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
           <input id="cma-rounds" type="number" min="10" step="10" value="100"
             style="flex:1;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;color:var(--txt);font-family:'Bebas Neue',sans-serif;font-size:18px;text-align:center;padding:5px 8px;outline:none;">
         </div>
-
         <div style="display:flex;align-items:center;gap:10px;">
           <span style="font-size:12px;color:var(--txt2);min-width:130px">Max générations</span>
           <input id="cma-gens" type="number" min="10" step="10" value="100"
             style="flex:1;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;color:var(--txt);font-family:'Bebas Neue',sans-serif;font-size:18px;text-align:center;padding:5px 8px;outline:none;">
         </div>
       </div>
-
-      <!-- Parameters to optimize -->
       <div style="background:var(--bg3);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;">
         <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px">Paramètres à optimiser</div>
         <div id="cma-param-rows" style="display:flex;flex-direction:column;gap:6px;"></div>
       </div>
-
-
-
-      <!-- Objective -->
       <div style="background:var(--bg3);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;">
         <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px">Fonction objectif</div>
-        <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px">Objectif</div>
         <div style="font-size:12px;color:var(--txt2);line-height:1.6;">
-          1. Pire gain &gt; 0<br>
+          1. Pire gain net > 0 (gain × bet − coût séquence × numéros)<br>
           2. Taux de survie maximal (rounds sans ruine / N)
         </div>
       </div>
-
-      <!-- Run button -->
       <button id="cma-run-btn" onclick="runOptimizer()" style="width:100%;padding:16px;font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:0.1em;border-radius:12px;border:none;background:var(--gold);color:#0f0f0f;cursor:pointer;">▶ Lancer</button>
     </div>
-
-    <!-- Results tab -->
     <div id="modal-panel-results" style="display:none;flex:1;overflow-y:auto;padding:14px 16px;flex-direction:column;gap:10px;">
-      <!-- Progress -->
       <div style="background:var(--bg3);border-radius:10px;padding:12px 14px;">
         <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
           <span style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em" id="cma-status">En attente</span>
@@ -396,78 +437,77 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
         </div>
         <div style="margin-top:6px;font-size:12px;color:var(--txt2)" id="cma-best-score">Score meilleur : —</div>
       </div>
-      <!-- Results list -->
       <div id="cma-results-list" style="display:flex;flex-direction:column;gap:8px;">
         <div style="font-size:13px;color:var(--txt3);text-align:center;padding:2rem 0">Lancez une optimisation pour voir les résultats</div>
       </div>
     </div>
-
   </div>
 </div>
 
 <script>
 
 const RED_NUMS = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
-const turns = [];
-let selected = null;
-let roundCounter = 1;
-function getCycleSize() {
-  const el = document.getElementById('o-freq');
-  const v = el ? parseInt(el.value) : 4;
-  return (v > 0 && !isNaN(v)) ? v : 4;
-}
-function getMinBet() {
-  const el = document.getElementById('o-minbet');
-  const v = el ? parseFloat(el.value) : 0.2;
-  return (v > 0 && !isNaN(v)) ? v : 0.2;
-}
-function ceilToStep(val, step) {
-  return Math.ceil(val / step) * step;
-}
-function getCurrentMultiplier() {
-  const freqEl   = document.getElementById('o-freq');
-  const factorEl = document.getElementById('o-factor');
-  const initEl   = document.getElementById('o-init');
-  const freq   = freqEl   ? parseInt(freqEl.value)     : 4;
-  const factor = factorEl ? parseFloat(factorEl.value) : 2;
-  const init   = initEl   ? parseFloat(initEl.value)   : 1;
-  const minBet = getMinBet();
-  const step   = Math.floor((roundCounter - 1) / freq);
-  const raw    = init * Math.pow(factor, step);
-  return ceilToStep(raw, minBet);
-}
-function isMilestone(n) {
-  const cs = getCycleSize();
-  return n > 1 && (n - 1) % cs === 0;
-}
-function nextMilestone(n) {
-  const cs = getCycleSize();
-  return Math.floor((n - 1) / cs) * cs + cs + 1;
-}
-function updateRoundDisplay() {
-  const el = document.getElementById('round-number');
-  el.textContent = roundCounter;
-  el.classList.toggle('milestone', isMilestone(roundCounter));
-  document.getElementById('round-next').textContent = 'Prochain jalon : ' + nextMilestone(roundCounter);
-  const mult = getCurrentMultiplier();
-  document.getElementById('round-cycle').textContent = mult % 1 === 0 ? mult.toFixed(0) : mult.toFixed(2);
-}
-function resetRoundCounter() { roundCounter = 1; updateRoundDisplay(); }
 
+// ── DATA MODEL ──
+// Each turn is now an array of numbers: e.g. [7], [3,14,22], [0]
+const turns = [];   // Array<number[]>
+const HOT_BUF_SIZE = 500;
+const hotBuffer = []; // flat: individual numbers
+
+let selectedNums = new Set(); // current round selection
+let roundCounter = 1;
+let initMode = false;
+
+// ── HELPERS ──
 function colorClass(n){ if(n===0)return 'grn'; return RED_NUMS.has(n)?'red':'blk'; }
 function colorLabel(n){ if(n===0)return 'Zéro'; return RED_NUMS.has(n)?'Rouge':'Noir'; }
 
+function getCycleSize(){ const el=document.getElementById('o-freq'); const v=el?parseInt(el.value):4; return (v>0&&!isNaN(v))?v:4; }
+function getMinBet(){ const el=document.getElementById('o-minbet'); const v=el?parseFloat(el.value):0.2; return (v>0&&!isNaN(v))?v:0.2; }
+function getNumsPerRound(){ const el=document.getElementById('o-nums'); const v=el?parseInt(el.value):1; return (v>=1&&!isNaN(v))?v:1; }
+function ceilToStep(val,step){ return Math.ceil(val/step)*step; }
+
+function getBetAt(r){
+  const freq   = parseInt(document.getElementById('o-freq').value||4);
+  const factor = parseFloat(document.getElementById('o-factor').value||2);
+  const init   = parseFloat(document.getElementById('o-init').value||1);
+  const minBet = getMinBet();
+  const step   = Math.floor((r-1)/freq);
+  return ceilToStep(init*Math.pow(factor,step), minBet);
+}
+
+function getTotalStakeAt(r){
+  return getBetAt(r) * getNumsPerRound();
+}
+
+function isMilestone(n){ const cs=getCycleSize(); return n>1&&(n-1)%cs===0; }
+function nextMilestone(n){ const cs=getCycleSize(); return Math.floor((n-1)/cs)*cs+cs+1; }
+
+function updateRoundDisplay(){
+  const el=document.getElementById('round-number');
+  el.textContent=roundCounter;
+  el.classList.toggle('milestone',isMilestone(roundCounter));
+  document.getElementById('round-next').textContent='Prochain jalon : '+nextMilestone(roundCounter);
+  const bet=getBetAt(roundCounter);
+  const nums=getNumsPerRound();
+  const totalStake=(bet*nums);
+  document.getElementById('round-cycle').textContent=bet%1===0?bet.toFixed(0):bet.toFixed(2);
+  document.getElementById('round-total-stake').textContent=totalStake%1===0?totalStake.toFixed(0):totalStake.toFixed(2);
+}
+function resetRoundCounter(){ roundCounter=1; updateRoundDisplay(); }
+
+// ── GRID ──
 function buildGrid(){
-  const container = document.getElementById('dozens-container');
-  [{label:'1 – 12',start:1},{label:'13 – 24',start:13},{label:'25 – 36',start:25}].forEach(dz => {
-    const s = dz.start;
-    const rows = [[],[],[]];
+  const container=document.getElementById('dozens-container');
+  [{label:'1 – 12',start:1},{label:'13 – 24',start:13},{label:'25 – 36',start:25}].forEach(dz=>{
+    const s=dz.start;
+    const rows=[[],[],[]];
     for(let col=0;col<4;col++){rows[0].push(s+col*3+2);rows[1].push(s+col*3+1);rows[2].push(s+col*3);}
-    const numsInOrder = [...rows[0],...rows[1],...rows[2]];
-    const block = document.createElement('div'); block.className='dozen-block';
-    const label = document.createElement('div'); label.className='dozen-label'; label.textContent=dz.label;
+    const numsInOrder=[...rows[0],...rows[1],...rows[2]];
+    const block=document.createElement('div'); block.className='dozen-block';
+    const label=document.createElement('div'); label.className='dozen-label'; label.textContent=dz.label;
     block.appendChild(label);
-    const grid = document.createElement('div'); grid.className='dozen-grid';
+    const grid=document.createElement('div'); grid.className='dozen-grid';
     numsInOrder.forEach(n=>{
       const btn=document.createElement('button');
       btn.className='num-btn '+colorClass(n); btn.textContent=n; btn.id='btn-'+n;
@@ -477,1104 +517,815 @@ function buildGrid(){
   });
 }
 
+// ── SELECTION ──
 function selectNum(n, fromMic){
   if(initMode){
-    turns.push(n);
+    // init mode: instantly push single numbers, no multi-select needed
+    turns.push([n]);
+    hotBuffer.push(n);
+    if(hotBuffer.length>HOT_BUF_SIZE) hotBuffer.shift();
     updateHistory(); updateHotNums();
     setOkBtnRemoveMode(true);
     const btn=document.getElementById('btn-'+n);
     if(btn){ btn.classList.add('selected'); setTimeout(()=>btn.classList.remove('selected'),300); }
     return;
   }
-  // in normal mode: only deselect previous if user tapped (not mic)
-  if(!fromMic && selected!==null){const p=document.getElementById('btn-'+selected);if(p)p.classList.remove('selected');}
-  selected=n;
-  document.getElementById('btn-'+n).classList.add('selected');
-  const bg=n===0?'var(--grn)':RED_NUMS.has(n)?'var(--red)':'#2a2a2a';
-  document.getElementById('sel-display').innerHTML=
-    `<span style="display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:middle;background:${bg}"></span>Sélectionné : <span class="sel-num">${n}</span> — ${colorLabel(n)}`;
-  document.getElementById('ok-btn').disabled=false;
+  // toggle selection
+  if(selectedNums.has(n)){
+    selectedNums.delete(n);
+    const btn=document.getElementById('btn-'+n);
+    if(btn) btn.classList.remove('selected');
+  } else {
+    selectedNums.add(n);
+    const btn=document.getElementById('btn-'+n);
+    if(btn) btn.classList.add('selected');
+  }
+  updateSelDisplay();
 }
 
-let initMode = false;
+function updateSelDisplay(){
+  const el=document.getElementById('sel-display');
+  const okBtn=document.getElementById('ok-btn');
+  if(selectedNums.size===0){
+    el.innerHTML='<span style="color:var(--txt3);font-size:14px">Aucun numéro sélectionné</span>';
+    okBtn.disabled=true;
+    return;
+  }
+  // build chips for each selected number
+  const chips=[...selectedNums].sort((a,b)=>a-b).map(n=>{
+    const bg=n===0?'var(--grn)':RED_NUMS.has(n)?'var(--red)':'#2a2a2a';
+    return `<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;background:${bg};font-family:'Bebas Neue',sans-serif;font-size:15px;color:#fff;">${n}</span>`;
+  }).join('');
+  el.innerHTML=`${chips}<span class="sel-count-pill"><span class="pill-num">${selectedNums.size}</span> sélectionné${selectedNums.size>1?'s':''}</span>`;
+  okBtn.disabled=false;
+}
 
+function clearSelection(){
+  selectedNums.forEach(n=>{
+    const btn=document.getElementById('btn-'+n);
+    if(btn) btn.classList.remove('selected');
+  });
+  selectedNums.clear();
+  updateSelDisplay();
+}
+
+// ── OK BUTTON MODES ──
+function setOkBtnNormal(){
+  const okBtn=document.getElementById('ok-btn');
+  okBtn.textContent='✓ Confirmer le tour';
+  okBtn.style.background='';
+  okBtn.style.color='';
+  okBtn.onclick=submitTurn;
+  okBtn.disabled=selectedNums.size===0;
+}
 function setOkBtnRemoveMode(on){
-  const okBtn = document.getElementById('ok-btn');
-  okBtn.disabled = false;
+  const okBtn=document.getElementById('ok-btn');
   if(on){
-    okBtn.textContent = '✕ Supprimer dernier';
-    okBtn.style.background = '#3a1515';
-    okBtn.style.color = '#e05050';
-    okBtn.onclick = initDelete;
+    okBtn.disabled=false;
+    okBtn.textContent='✕ Supprimer dernier';
+    okBtn.style.background='#3a1515';
+    okBtn.style.color='#e05050';
+    okBtn.onclick=initDelete;
   } else {
-    okBtn.textContent = '✓ Confirmer';
-    okBtn.style.background = '';
-    okBtn.style.color = '';
-    okBtn.onclick = submitTurn;
-    okBtn.disabled = selected === null;
+    setOkBtnNormal();
   }
 }
 
+// ── INIT MODE ──
 function toggleInitMode(){
-  initMode = !initMode;
-  const btn = document.getElementById('init-mode-btn');
+  initMode=!initMode;
+  const btn=document.getElementById('init-mode-btn');
   if(initMode){
-    btn.style.background = '#1a3a1a';
-    btn.style.color = '#1db954';
-    btn.style.borderColor = '#1db954';
-    btn.textContent = '✓ Fin Init';
-    // show remove btn only if there's something to remove
-    setOkBtnRemoveMode(turns.length > 0);
+    btn.style.background='#1a3a1a'; btn.style.color='#1db954'; btn.style.borderColor='#1db954';
+    btn.textContent='✓ Fin Init';
+    setOkBtnRemoveMode(turns.length>0);
   } else {
-    btn.style.background = 'var(--bg3)';
-    btn.style.color = 'var(--txt2)';
-    btn.style.borderColor = 'var(--border)';
-    btn.textContent = '⚡ Init';
-    setOkBtnRemoveMode(false);
+    btn.style.background='var(--bg3)'; btn.style.color='var(--txt2)'; btn.style.borderColor='var(--border)';
+    btn.textContent='⚡ Init';
+    clearSelection();
+    setOkBtnNormal();
   }
 }
 
 function initDelete(){
   if(!turns.length) return;
-  turns.pop();
-  // deselect current selection if any
-  if(selected!==null){
-    const p=document.getElementById('btn-'+selected); if(p)p.classList.remove('selected');
-    selected=null;
-    document.getElementById('sel-display').innerHTML='<span style="color:var(--txt3)">Aucun numéro sélectionné</span>';
-  }
+  const last=turns.pop();
+  // remove those numbers from hotBuffer (last N entries)
+  last.forEach(()=>{ if(hotBuffer.length) hotBuffer.pop(); });
   updateHistory(); updateHotNums(); saveState();
-  // if nothing left to delete, disable the remove btn
-  setOkBtnRemoveMode(turns.length > 0);
+  setOkBtnRemoveMode(turns.length>0);
 }
 
+// ── SUBMIT ──
 function submitTurn(){
-  if(selected===null)return;
-  turns.push(selected);
+  if(selectedNums.size===0) return;
+  const nums=[...selectedNums].sort((a,b)=>a-b);
+  turns.push(nums);
+  nums.forEach(n=>{
+    hotBuffer.push(n);
+    if(hotBuffer.length>HOT_BUF_SIZE) hotBuffer.shift();
+  });
   if(!initMode) roundCounter++;
-  document.getElementById('btn-'+selected).classList.remove('selected');
-  selected=null;
-  document.getElementById('sel-display').innerHTML='<span style="color:var(--txt3)">Aucun numéro sélectionné</span>';
-  document.getElementById('ok-btn').disabled=true;
+  clearSelection();
   updateHistory(); updateRoundDisplay(); updateHotNums(); saveState();
 }
 
+// ── HISTORY ──
 function updateHistory(){
   const row=document.getElementById('history-row');
   document.getElementById('history-count').textContent=turns.length;
-  if(!turns.length){row.innerHTML='<span style="color:var(--txt3);font-size:13px">Aucun tour</span>';return;}
-  row.innerHTML=[...turns].reverse().slice(0,30).map(n=>`<div class="hist-chip ${colorClass(n)}">${n}</div>`).join('');
+  if(!turns.length){ row.innerHTML='<span style="color:var(--txt3);font-size:13px">Aucun tour</span>'; return; }
+  // show last 20 rounds
+  const recent=[...turns].reverse().slice(0,20);
+  row.innerHTML=recent.map(nums=>{
+    if(nums.length===1){
+      return `<div class="hist-chip ${colorClass(nums[0])}">${nums[0]}</div>`;
+    }
+    const chips=nums.map(n=>`<div class="hist-chip ${colorClass(n)}" style="width:24px;height:24px;font-size:12px;">${n}</div>`).join('');
+    return `<div class="hist-group">${chips}</div>`;
+  }).join('');
 }
 
+// ── HOT NUMS ──
+function pushHot(n){
+  hotBuffer.push(n);
+  if(hotBuffer.length>HOT_BUF_SIZE) hotBuffer.shift();
+}
 function updateHotNums(){
-  const w=turns.slice(-30);
-  document.getElementById('hot-count').textContent=w.length+' / 30 tours';
+  const winEl=document.getElementById('hot-window');
+  const win=winEl?Math.max(1,Math.min(HOT_BUF_SIZE,parseInt(winEl.value)||30)):30;
+  const w=hotBuffer.slice(-win);
+  document.getElementById('hot-count').textContent=w.length+' / '+win+' tours';
   const el=document.getElementById('hot-nums');
-  if(!w.length){el.innerHTML='<span class="hot-empty">Pas assez de données</span>';return;}
+  if(!w.length){ el.innerHTML='<span class="hot-empty">Pas assez de données</span>'; return; }
   const freq={};
   w.forEach(x=>freq[x]=(freq[x]||0)+1);
   const top=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([x])=>Number(x));
   el.innerHTML=top.map(n=>`<div class="hot-chip ${colorClass(n)}">${n}</div>`).join('');
 }
 
+// ── TABS ──
 function switchTab(tab){
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['entry','stats','play','opt'][i]===tab));
   ['entry','stats','play','opt'].forEach(p=>document.getElementById('panel-'+p).classList.toggle('active',p===tab));
-  if(tab==='stats')renderStats();
-  if(tab==='play')renderPlay();
-  if(tab==='opt'){renderOpt(); updateMC();}
+  if(tab==='stats') renderStats();
+  if(tab==='play')  renderPlay();
+  if(tab==='opt')   { renderOpt(); updateMC(); }
 }
 
+// ── PLAY TAB ──
 function renderPlay(){
   const el=document.getElementById('play-content');
-  if(!turns.length){el.innerHTML='<div class="play-empty">Aucun tour enregistré.<br><br>Allez dans Entry et soumettez des numéros.</div>';return;}
-  const last15=turns.slice(-15);
-  const colored15=last15.filter(n=>n!==0);
+  if(!turns.length){ el.innerHTML='<div class="play-empty">Aucun tour enregistré.<br><br>Allez dans Entry et soumettez des numéros.</div>'; return; }
+  // flatten last 15 rounds into individual numbers
+  const last15rounds=turns.slice(-15);
+  const flat15=last15rounds.flat();
+  const colored15=flat15.filter(n=>n!==0);
   const reds=colored15.filter(n=>RED_NUMS.has(n)).length;
   const blks=colored15.length-reds;
   let colorHTML;
-  if(reds===blks)colorHTML=`<span class="play-no-signal">— PAS DE SIGNAL —</span>`;
-  else if(reds>blks)colorHTML=`<span class="play-color-badge red">🔴 Rouge</span>`;
+  if(reds===blks) colorHTML=`<span class="play-no-signal">— PAS DE SIGNAL —</span>`;
+  else if(reds>blks) colorHTML=`<span class="play-color-badge red">🔴 Rouge</span>`;
   else colorHTML=`<span class="play-color-badge blk">⚫ Noir</span>`;
   const dz=[0,0,0];
-  last15.forEach(n=>{if(n>=1&&n<=12)dz[0]++;else if(n>=13&&n<=24)dz[1]++;else if(n>=25&&n<=36)dz[2]++;});
+  flat15.forEach(n=>{ if(n>=1&&n<=12)dz[0]++; else if(n>=13&&n<=24)dz[1]++; else if(n>=25&&n<=36)dz[2]++; });
   const maxDz=Math.max(...dz);
   const topDzCount=dz.filter(v=>v===maxDz).length;
   let dozenHTML;
-  if(maxDz===0||topDzCount>1)dozenHTML=`<span class="play-no-signal">— PAS DE SIGNAL —</span>`;
-  else{const dzIdx=dz.indexOf(maxDz);dozenHTML=`<span class="play-dozen-badge">${['1 – 12','13 – 24','25 – 36'][dzIdx]}</span>`;}
+  if(maxDz===0||topDzCount>1) dozenHTML=`<span class="play-no-signal">— PAS DE SIGNAL —</span>`;
+  else{ const dzIdx=dz.indexOf(maxDz); dozenHTML=`<span class="play-dozen-badge">${['1 – 12','13 – 24','25 – 36'][dzIdx]}</span>`; }
   el.innerHTML=`
     <div class="play-block">
-      <div class="play-block-title">Couleur — ${colored15.length} derniers tours (sans 0)</div>${colorHTML}
+      <div class="play-block-title">Couleur — ${last15rounds.length} derniers tours (sans 0)</div>${colorHTML}
     </div>
     <div class="play-block">
-      <div class="play-block-title">Douzaine — ${last15.length} derniers tours</div>${dozenHTML}
+      <div class="play-block-title">Douzaine — ${last15rounds.length} derniers tours</div>${dozenHTML}
     </div>`;
 }
 
+// ── STATS TAB ──
 function renderStats(){
   const el=document.getElementById('stats-content');
-  if(!turns.length){el.innerHTML='<div class="empty-msg">Aucun tour enregistré.<br>Allez dans Entry.</div>';return;}
-  const last15=turns.slice(-15);
-  const last30=turns.slice(-30);
-  const colored15=last15.filter(n=>n!==0);
+  if(!turns.length){ el.innerHTML='<div class="empty-msg">Aucun tour enregistré.<br>Allez dans Entry.</div>'; return; }
+  const last15rounds=turns.slice(-15);
+  const last30rounds=turns.slice(-30);
+  const flat15=last15rounds.flat();
+  const flat30=last30rounds.flat();
+  const colored15=flat15.filter(n=>n!==0);
   const reds15=colored15.filter(n=>RED_NUMS.has(n)).length;
   const blks15=colored15.length-reds15;
   const tot=colored15.length||1;
   const redPct=Math.round(reds15/tot*100);
   const blkPct=Math.round(blks15/tot*100);
   const dz=[0,0,0];
-  last15.forEach(n=>{if(n>=1&&n<=12)dz[0]++;else if(n>=13&&n<=24)dz[1]++;else if(n>=25&&n<=36)dz[2]++;});
+  flat15.forEach(n=>{ if(n>=1&&n<=12)dz[0]++; else if(n>=13&&n<=24)dz[1]++; else if(n>=25&&n<=36)dz[2]++; });
   const dzTot=dz.reduce((a,b)=>a+b,0)||1;
   const freq={};
-  last30.forEach(n=>freq[n]=(freq[n]||0)+1);
+  flat30.forEach(n=>freq[n]=(freq[n]||0)+1);
   const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,15);
   el.innerHTML=`
     <div class="stat-card">
-      <div class="stat-card-title">Couleurs — ${last15.length} derniers tours (0 exclu)</div>
+      <div class="stat-card-title">Couleurs — ${last15rounds.length} derniers tours (0 exclu)</div>
       <div class="stat-row"><span class="stat-label" style="color:#e05050">Rouge</span><div class="bar-wrap"><div class="bar red" style="width:${redPct}%"></div></div><span class="stat-val">${reds15} · ${redPct}%</span></div>
       <div class="stat-row"><span class="stat-label" style="color:#aaa">Noir</span><div class="bar-wrap"><div class="bar blk" style="width:${blkPct}%"></div></div><span class="stat-val">${blks15} · ${blkPct}%</span></div>
     </div>
     <div>
-      <div class="section-label" style="margin-bottom:8px">Douzaines — ${last15.length} derniers tours</div>
+      <div class="section-label" style="margin-bottom:8px">Douzaines — ${last15rounds.length} derniers tours</div>
       <div class="dozen-cards">${['1–12','13–24','25–36'].map((label,i)=>`<div class="dz-card"><div class="dz-card-label">${label}</div><div class="dz-card-val">${dz[i]}</div><div class="dz-card-pct">${Math.round(dz[i]/dzTot*100)}%</div></div>`).join('')}</div>
     </div>
     <div>
       <div class="section-label" style="margin-bottom:8px">Top 15 numéros — ${Math.min(turns.length,30)} derniers tours</div>
-      ${!sorted.length?'<div class="empty-msg">Pas assez de données</div>':`<table class="freq-table"><thead><tr><th>Rang</th><th>N°</th><th>Hits</th><th>Fréq.</th></tr></thead><tbody>${sorted.map(([n,count],i)=>{const pct=Math.round(count/last30.length*100);return`<tr><td style="color:var(--txt3)">#${i+1}</td><td><span class="chip-sm ${colorClass(Number(n))}">${n}</span></td><td style="font-weight:600">${count}</td><td style="color:var(--txt2)">${pct}%</td></tr>`;}).join('')}</tbody></table>`}
+      ${!sorted.length?'<div class="empty-msg">Pas assez de données</div>':`<table class="freq-table"><thead><tr><th>Rang</th><th>N°</th><th>Hits</th><th>Fréq.</th></tr></thead><tbody>${sorted.map(([n,count],i)=>{const pct=Math.round(count/flat30.length*100);return`<tr><td style="color:var(--txt3)">#${i+1}</td><td><span class="chip-sm ${colorClass(Number(n))}">${n}</span></td><td style="font-weight:600">${count}</td><td style="color:var(--txt2)">${pct}%</td></tr>`;}).join('')}</tbody></table>`}
     </div>`;
 }
 
-
 // ── MIC / SPEECH ──
-const WORD_MAP = {
-  zéro:0,zero:0,un:1,une:1,deux:2,trois:3,quatre:4,cinq:5,six:6,sept:7,huit:8,neuf:9,
-  dix:10,onze:11,douze:12,treize:13,quatorze:14,quinze:15,seize:16,
-  vingt:20,trente:30,quarante:40,cinquante:50,soixante:60,
-  septante:70,huitante:80,octante:80,nonante:90
-};
-function normalizeSpeech(p){
-  return p.toLowerCase()
-    .replace(/quatre[- ]vingt[- ]dix/g,'nonante')
-    .replace(/quatre[- ]vingts?/g,'huitante')
-    .replace(/soixante[- ]dix/g,'septante')
-    .replace(/[- ]+/g,' ').trim();
-}
-function wordsToNum(phrase){
-  const tokens=normalizeSpeech(phrase).split(' ');
-  let total=0,current=0,valid=false;
-  for(const t of tokens){
-    if(WORD_MAP[t]===undefined) continue;
-    valid=true; const v=WORD_MAP[t];
-    if(v>=100){current=current?current*v:v;}
-    else{current+=v;}
-  }
-  return valid?total+current:null;
-}
-function extractFirstNumber(text){
-  // try digit first
-  const dm=text.match(/\b(3[0-6]|[0-2]?[0-9])\b/);
-  if(dm) return parseInt(dm[1]);
-  // try word
-  const wordPat=/(?:(?:zéro|zero|un|une|deux|trois|quatre-vingt(?:-dix)?|quatre-vingts?|soixante-dix|soixante|cinq|six|sept|huit|neuf|dix|onze|douze|treize|quatorze|quinze|seize|vingt|trente)(?:[- ](?:et[- ])?)?)+/gi;
-  const wm=text.match(wordPat);
-  if(wm){for(const m of wm){const n=wordsToNum(m);if(n!==null&&n>=0&&n<=36)return n;}}
-  return null;
-}
-let micRec=null, micListening=false, micStopping=false;
+const WORD_MAP = {zéro:0,zero:0,un:1,une:1,deux:2,trois:3,quatre:4,cinq:5,six:6,sept:7,huit:8,neuf:9,dix:10,onze:11,douze:12,treize:13,quatorze:14,quinze:15,seize:16,vingt:20,trente:30,quarante:40,cinquante:50,soixante:60,septante:70,huitante:80,octante:80,nonante:90};
+function normalizeSpeech(p){ return p.toLowerCase().replace(/quatre[- ]vingt[- ]dix/g,'nonante').replace(/quatre[- ]vingts?/g,'huitante').replace(/soixante[- ]dix/g,'septante').replace(/[- ]+/g,' ').trim(); }
+function wordsToNum(phrase){ const tokens=normalizeSpeech(phrase).split(' '); let total=0,current=0,valid=false; for(const t of tokens){ if(WORD_MAP[t]===undefined)continue; valid=true; const v=WORD_MAP[t]; if(v>=100){current=current?current*v:v;}else{current+=v;} } return valid?total+current:null; }
+function extractFirstNumber(text){ const dm=text.match(/\b(3[0-6]|[0-2]?[0-9])\b/); if(dm)return parseInt(dm[1]); const wordPat=/(?:(?:zéro|zero|un|une|deux|trois|quatre-vingt(?:-dix)?|quatre-vingts?|soixante-dix|soixante|cinq|six|sept|huit|neuf|dix|onze|douze|treize|quatorze|quinze|seize|vingt|trente)(?:[- ](?:et[- ])?)?)+/gi; const wm=text.match(wordPat); if(wm){for(const m of wm){const n=wordsToNum(m);if(n!==null&&n>=0&&n<=36)return n;}} return null; }
+
+let micRec=null,micListening=false,micStopping=false;
 function initMicRec(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){alert('Web Speech API non supporté — utilisez Chrome ou Safari');return null;}
+  if(!SR){alert('Web Speech API non supporté');return null;}
   const r=new SR();
   r.continuous=true; r.interimResults=true; r.lang='fr-FR';
   r.onresult=e=>{
     let interim='',final='';
-    for(let i=e.resultIndex;i<e.results.length;i++){
-      const t=e.results[i][0].transcript;
-      e.results[i].isFinal?(final+=t):(interim+=t);
-    }
+    for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript; e.results[i].isFinal?(final+=t):(interim+=t);}
     const el=document.getElementById('mic-transcript');
     if(el) el.textContent=final||interim;
     if(final){
       const lower=final.toLowerCase().trim();
-      const hasOk=!initMode && /\bok\b/.test(lower);
+      const hasOk=!initMode&&/\bok\b/.test(lower);
       const n=extractFirstNumber(final);
-
       if(n!==null&&n>=0&&n<=36){
-        if(initMode){
-          turns.push(n);
-          updateHistory(); updateHotNums();
-          setOkBtnRemoveMode(true);
-          if(el){ el.style.display='block'; el.textContent='✓ '+n; }
-        } else {
-          // select the number
-          if(selected!==null){const p=document.getElementById('btn-'+selected);if(p)p.classList.remove('selected');}
-          selected=n;
-          const numBtn=document.getElementById('btn-'+n);
-          if(numBtn) numBtn.classList.add('selected');
-          const bg=n===0?'var(--grn)':RED_NUMS.has(n)?'var(--red)':'#2a2a2a';
-          document.getElementById('sel-display').innerHTML=
-            `<span style="display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:middle;background:${bg}"></span>Sélectionné : <span class="sel-num">${n}</span> — ${colorLabel(n)}`;
-          document.getElementById('ok-btn').disabled=false;
-          if(hasOk){
-            // number + ok in same buffer: confirm immediately
-            submitTurn();
-            if(el){ el.style.display='block'; el.textContent='✓ '+n+' — Confirmé'; }
-          } else {
-            if(el){ el.style.display='block'; el.textContent='✓ '+n; }
-          }
-        }
-      } else if(hasOk && selected!==null){
-        // ok in its own buffer, number already selected
+        selectNum(n, true);
+        const elT=document.getElementById('mic-transcript');
+        if(elT){elT.style.display='block'; elT.textContent='✓ '+n;}
+        if(hasOk&&selectedNums.size>0){ submitTurn(); if(elT){elT.textContent='✓ '+n+' — Confirmé';} }
+      } else if(hasOk&&selectedNums.size>0){
         submitTurn();
-        if(el){ el.style.display='block'; el.textContent='✓ Confirmé'; }
+        const elT=document.getElementById('mic-transcript'); if(elT){elT.style.display='block';elT.textContent='✓ Confirmé';}
       } else {
-        if(el) el.textContent='Non reconnu : '+final;
+        const elT=document.getElementById('mic-transcript'); if(elT) elT.textContent='Non reconnu : '+final;
       }
     }
   };
-  r.onerror=e=>{
-    const el=document.getElementById('mic-transcript');
-    if(el) el.textContent='Erreur : '+e.error;
-    micStopping=true;
-    setMicIdle();
-  };
-  r.onend=()=>{
-    micStopping=false;
-    micListening=false;
-    setMicIdle();
-  };
+  r.onerror=e=>{const el=document.getElementById('mic-transcript');if(el)el.textContent='Erreur : '+e.error;micStopping=true;setMicIdle();};
+  r.onend=()=>{micStopping=false;micListening=false;setMicIdle();};
   return r;
 }
-function setMicIdle(){
-  micListening=false;
-  const btn=document.getElementById('mic-btn');
-  if(btn){btn.textContent='🎤';btn.style.background='var(--bg3)';btn.style.color='var(--txt2)';btn.style.borderColor='var(--border)';}
-}
-function stopMic(){
-  if(micStopping||!micListening) return;
-  micStopping=true;
-  micListening=false;
-  try{if(micRec)micRec.stop();}catch(e){}
-  setMicIdle();
-  const el=document.getElementById('mic-transcript');
-  if(el) el.style.display='none';
-}
+function setMicIdle(){ micListening=false; const btn=document.getElementById('mic-btn'); if(btn){btn.textContent='🎤';btn.style.background='var(--bg3)';btn.style.color='var(--txt2)';btn.style.borderColor='var(--border)';} }
+function stopMic(){ if(micStopping||!micListening)return; micStopping=true;micListening=false; try{if(micRec)micRec.stop();}catch(e){} setMicIdle(); const el=document.getElementById('mic-transcript');if(el)el.style.display='none'; }
 function toggleMic(){
   if(micListening){stopMic();return;}
   if(!micRec) micRec=initMicRec();
   if(!micRec) return;
-  micStopping=false;
-  micListening=true;
+  micStopping=false; micListening=true;
   const btn=document.getElementById('mic-btn');
   btn.textContent='⏹'; btn.style.background='#1a2a3a'; btn.style.color='#4a9eff'; btn.style.borderColor='#4a9eff';
   const el=document.getElementById('mic-transcript');
   el.style.display='block'; el.textContent='En écoute…';
-  try{micRec.start();}catch(e){
-    micRec=initMicRec();
-    if(micRec){micStopping=false;micListening=true;micRec.start();}
-  }
+  try{micRec.start();}catch(e){micRec=initMicRec();if(micRec){micStopping=false;micListening=true;micRec.start();}}
 }
 
-
-// ── INDEXEDDB PERSISTENCE ──
-const DB_NAME = 'roulette_app', DB_VER = 1, STORE = 'state';
-let db = null;
-
-function openDB(cb){
-  if(db){ cb(db); return; }
-  const req = indexedDB.open(DB_NAME, DB_VER);
-  req.onupgradeneeded = e => e.target.result.createObjectStore(STORE);
-  req.onsuccess = e => { db = e.target.result; cb(db); };
-  req.onerror = () => console.warn('IndexedDB unavailable');
-}
-
+// ── INDEXEDDB ──
+const DB_NAME='roulette_app',DB_VER=2,STORE='state';
+let db=null;
+function openDB(cb){ if(db){cb(db);return;} const req=indexedDB.open(DB_NAME,DB_VER); req.onupgradeneeded=e=>{ const idb=e.target.result; if(!idb.objectStoreNames.contains(STORE)) idb.createObjectStore(STORE); }; req.onsuccess=e=>{db=e.target.result;cb(db);}; req.onerror=()=>console.warn('IndexedDB unavailable'); }
 function saveState(){
-  openDB(db => {
-    const tx = db.transaction(STORE, 'readwrite');
+  openDB(db=>{
+    const tx=db.transaction(STORE,'readwrite');
     tx.objectStore(STORE).put({
-      turns: [...turns],
+      turns:turns.map(t=>[...t]),
+      hotBuffer:[...hotBuffer],
       roundCounter,
-      playActive: document.getElementById('play-badge').style.display !== 'none'
-    }, 'current');
+      playActive:document.getElementById('play-badge').style.display!=='none'
+    },'current');
   });
 }
-
 function saveOptState(){
-  openDB(db => {
-    const gain    = document.getElementById('o-gain')   ? document.getElementById('o-gain').value   : 2;
-    const factor  = document.getElementById('o-factor') ? document.getElementById('o-factor').value : 2;
-    const freq    = document.getElementById('o-freq')   ? document.getElementById('o-freq').value   : 4;
-    const init    = document.getElementById('o-init')   ? document.getElementById('o-init').value   : 1;
-    const minbet  = document.getElementById('o-minbet') ? document.getElementById('o-minbet').value : 0.2;
-    const maxcap  = document.getElementById('o-maxcap') ? document.getElementById('o-maxcap').value : '';
-    const tx = db.transaction(STORE, 'readwrite');
-    tx.objectStore(STORE).put({ gain, factor, freq, init, minbet, maxcap }, 'opt');
+  openDB(db=>{
+    const g=id=>{const el=document.getElementById(id);return el?el.value:null;};
+    const tx=db.transaction(STORE,'readwrite');
+    tx.objectStore(STORE).put({
+      gain:g('o-gain'),factor:g('o-factor'),freq:g('o-freq'),init:g('o-init'),
+      minbet:g('o-minbet'),maxcap:g('o-maxcap'),hotwin:g('hot-window'),nums:g('o-nums')
+    },'opt');
   });
 }
-
 function saveOptimizerState(){
-  openDB(db => {
-    const get = id => { const el=document.getElementById(id); return el ? el.value : null; };
-    const state = {
-      capital:    get('cma-capital'),
-      rounds:     get('cma-rounds'),
-      gens:       get('cma-gens'),
-
-    };
-    // param rows (checked, min, max, step, defval)
-    state.params = {};
-    ['gain','factor','freq','init','minbet'].forEach(id => {
-      const chk = document.getElementById('cma-check-'+id);
-      state.params[id] = {
-        checked: chk ? chk.checked : true,
-        min:     get('cma-min-'+id),
-        max:     get('cma-max-'+id),
-        step:    get('cma-step-'+id),
-        defval:  get('cma-defval-'+id),
-      };
+  openDB(db=>{
+    const get=id=>{const el=document.getElementById(id);return el?el.value:null;};
+    const state={capital:get('cma-capital'),rounds:get('cma-rounds'),gens:get('cma-gens'),params:{}};
+    ['gain','factor','freq','init','minbet','nums'].forEach(id=>{
+      const chk=document.getElementById('cma-check-'+id);
+      state.params[id]={checked:chk?chk.checked:true,min:get('cma-min-'+id),max:get('cma-max-'+id),step:get('cma-step-'+id),defval:get('cma-defval-'+id)};
     });
     db.transaction('state','readwrite').objectStore('state').put(state,'optimizer');
   });
 }
-
-function loadOptimizerState(cb){
-  openDB(db => {
-    const req = db.transaction('state').objectStore('state').get('optimizer');
-    req.onsuccess = e => cb(e.target.result || null);
-    req.onerror   = () => cb(null);
-  });
-}
-
+function loadOptimizerState(cb){ openDB(db=>{const req=db.transaction('state').objectStore('state').get('optimizer');req.onsuccess=e=>cb(e.target.result||null);req.onerror=()=>cb(null);}); }
 function applyOptimizerState(s){
-  if(!s) return;
-  const set = (id, val) => { const el=document.getElementById(id); if(el && val!=null) el.value=val; };
-  set('cma-capital',    s.capital);
-  set('cma-rounds',     s.rounds);
-  set('cma-gens',       s.gens);
-
-
-
-  if(s.params){
-    ['gain','factor','freq','init','minbet'].forEach(id => {
-      const p = s.params[id]; if(!p) return;
-      const chk = document.getElementById('cma-check-'+id);
-      if(chk){ chk.checked = p.checked; toggleParamRow(id); }
-      set('cma-min-'+id,    p.min);
-      set('cma-max-'+id,    p.max);
-      set('cma-step-'+id,   p.step);
-      set('cma-defval-'+id, p.defval);
-    });
-  }
+  if(!s)return;
+  const set=(id,val)=>{const el=document.getElementById(id);if(el&&val!=null)el.value=val;};
+  set('cma-capital',s.capital); set('cma-rounds',s.rounds); set('cma-gens',s.gens);
+  if(s.params){['gain','factor','freq','init','minbet','nums'].forEach(id=>{const p=s.params[id];if(!p)return;const chk=document.getElementById('cma-check-'+id);if(chk){chk.checked=p.checked;toggleParamRow(id);}set('cma-min-'+id,p.min);set('cma-max-'+id,p.max);set('cma-step-'+id,p.step);set('cma-defval-'+id,p.defval);});}
 }
-
-function loadOptState(cb){
-  openDB(db => {
-    const req = db.transaction(STORE).objectStore(STORE).get('opt');
-    req.onsuccess = e => cb(e.target.result || null);
-    req.onerror   = () => cb(null);
-  });
-}
-
+function loadOptState(cb){ openDB(db=>{const req=db.transaction(STORE).objectStore(STORE).get('opt');req.onsuccess=e=>cb(e.target.result||null);req.onerror=()=>cb(null);}); }
 function applyOptState(s){
-  if(!s) return;
-  const set = (id, val) => { const el=document.getElementById(id); if(el && val!==undefined && val!=='') el.value=val; };
-  set('o-gain',   s.gain);
-  set('o-factor', s.factor);
-  set('o-freq',   s.freq);
-  set('o-minbet', s.minbet);
-  set('o-maxcap', s.maxcap);
-  // o-init will be clamped by renderOpt
-  set('o-init',   s.init);
+  if(!s)return;
+  const set=(id,val)=>{const el=document.getElementById(id);if(el&&val!==undefined&&val!=='')el.value=val;};
+  set('o-gain',s.gain);set('o-factor',s.factor);set('o-freq',s.freq);set('o-minbet',s.minbet);set('o-maxcap',s.maxcap);set('o-init',s.init);
+  if(s.hotwin)set('hot-window',s.hotwin);
+  if(s.nums)set('o-nums',s.nums);
 }
-
-function loadState(cb){
-  openDB(db => {
-    const req = db.transaction(STORE).objectStore(STORE).get('current');
-    req.onsuccess = e => cb(e.target.result || null);
-    req.onerror   = () => cb(null);
-  });
-}
-
+function loadState(cb){ openDB(db=>{const req=db.transaction(STORE).objectStore(STORE).get('current');req.onsuccess=e=>cb(e.target.result||null);req.onerror=()=>cb(null);}); }
 function applyState(s){
-  if(!s) return;
-  // always restore history and counter
-  turns.length = 0;
-  if(s.turns) turns.push(...s.turns);
-  roundCounter = s.roundCounter || 1;
+  if(!s)return;
+  turns.length=0; hotBuffer.length=0;
+  if(s.turns) s.turns.forEach(t=>turns.push(Array.isArray(t)?[...t]:[t]));
+  if(s.hotBuffer&&s.hotBuffer.length){hotBuffer.push(...s.hotBuffer.slice(-HOT_BUF_SIZE));}
+  else if(s.turns){s.turns.forEach(t=>(Array.isArray(t)?t:[t]).forEach(n=>{hotBuffer.push(n);if(hotBuffer.length>HOT_BUF_SIZE)hotBuffer.shift();}));}
+  roundCounter=s.roundCounter||1;
   updateHistory(); updateRoundDisplay(); updateHotNums();
-  // restore play badge only if a play was active
-  if(!s.playActive) return;
-  const badge = document.getElementById('play-badge');
-  badge.style.display = 'flex';
-  document.getElementById('new-play-btn').textContent = '■ Fin de partie';
-  document.getElementById('new-play-btn').style.color = '#e05050';
-  document.getElementById('new-play-btn').style.borderColor = '#6a2525';
-  document.getElementById('new-play-btn').style.background = '#2a1515';
+  if(!s.playActive)return;
+  const badge=document.getElementById('play-badge');
+  badge.style.display='flex';
+  document.getElementById('new-play-btn').textContent='■ Fin de partie';
+  document.getElementById('new-play-btn').style.color='#e05050';
+  document.getElementById('new-play-btn').style.borderColor='#6a2525';
+  document.getElementById('new-play-btn').style.background='#2a1515';
 }
 
+// ── NEW PLAY ──
 function newPlay(){
-  const badge = document.getElementById('play-badge');
-  const btn   = document.getElementById('new-play-btn');
-  const active = badge.style.display !== 'none';
+  const badge=document.getElementById('play-badge');
+  const btn=document.getElementById('new-play-btn');
+  const active=badge.style.display!=='none';
   if(!active){
-    // start new play: reset everything
-    turns.length = 0;
-    roundCounter = 1;
-    selected = null;
-    document.getElementById('sel-display').innerHTML = '<span style="color:var(--txt3)">Aucun numéro sélectionné</span>';
-    document.getElementById('ok-btn').disabled = true;
-    document.getElementById('ok-btn').textContent = '✓ Confirmer';
-    document.getElementById('ok-btn').style.background = '';
-    document.getElementById('ok-btn').style.color = '';
-    document.getElementById('ok-btn').onclick = submitTurn;
+    turns.length=0; hotBuffer.length=0; roundCounter=1;
+    clearSelection();
     if(initMode) toggleInitMode();
-    badge.style.display = 'flex';
-    btn.textContent = '■ Fin de partie';
-    btn.style.color = '#e05050';
-    btn.style.borderColor = '#6a2525';
-    btn.style.background = '#2a1515';
-    updateHistory(); updateRoundDisplay(); updateHotNums();
-    saveState();
+    badge.style.display='flex';
+    btn.textContent='■ Fin de partie'; btn.style.color='#e05050'; btn.style.borderColor='#6a2525'; btn.style.background='#2a1515';
+    updateHistory(); updateRoundDisplay(); updateHotNums(); saveState();
   } else {
-    // end play
-    badge.style.display = 'none';
-    btn.textContent = '＋ Nouvelle partie';
-    btn.style.color = 'var(--txt2)';
-    btn.style.borderColor = 'var(--border)';
-    btn.style.background = 'var(--bg3)';
-    // clear persisted state
-    openDB(db => db.transaction(STORE,'readwrite').objectStore(STORE).delete('current'));
+    badge.style.display='none';
+    btn.textContent='＋ Nouvelle partie'; btn.style.color='var(--txt2)'; btn.style.borderColor='var(--border)'; btn.style.background='var(--bg3)';
+    openDB(db=>db.transaction(STORE,'readwrite').objectStore(STORE).delete('current'));
   }
 }
-
 
 // ── MONTE CARLO ──
-let mcChart = null;
-
+// Revised: p = nums/total (probability that at least one of picked numbers wins)
+// Payout: gain × bet (per number) for the winning number, cost = bet × nums × rounds_in_sequence
+let mcChart=null;
 function updateMC(){
-  const picked    = parseInt(document.getElementById('mc-picked').value);
-  const total     = parseInt(document.getElementById('mc-total').value);
-  const sims      = parseInt(document.getElementById('mc-sims').value);
-  const numRounds = parseInt(document.getElementById('mc-rounds').value);
+  const nums    = parseInt(document.getElementById('mc-picked').value);
+  const total   = parseInt(document.getElementById('mc-total').value);
+  const sims    = parseInt(document.getElementById('mc-sims').value);
+  const numRounds= parseInt(document.getElementById('mc-rounds').value);
 
-  document.getElementById('mc-picked-v').textContent  = picked;
-  document.getElementById('mc-total-v').textContent   = total;
-  document.getElementById('mc-sims-v').textContent    = sims;
-  document.getElementById('mc-rounds-v').textContent  = numRounds;
+  document.getElementById('mc-picked-v').textContent=nums;
+  document.getElementById('mc-total-v').textContent=total;
+  document.getElementById('mc-sims-v').textContent=sims;
+  document.getElementById('mc-rounds-v').textContent=numRounds;
 
-  const p = Math.min(picked, total - 1) / total;
+  // probability at least one of nums wins per spin (assuming distinct numbers, no overlap)
+  const pWin=Math.min(nums,total-1)/total;
 
-  const gain   = parseFloat(document.getElementById('o-gain').value   || 2);
-  const factor = parseFloat(document.getElementById('o-factor').value || 2);
-  const freq   = parseInt(document.getElementById('o-freq').value     || 4);
-  const init   = parseFloat(document.getElementById('o-init').value   || 1);
-  const minBet = getMinBet();
-  const maxCapEl = document.getElementById('o-maxcap');
-  const maxCap = (maxCapEl && maxCapEl.value !== '') ? parseFloat(maxCapEl.value) : Infinity;
+  const gain   =parseFloat(document.getElementById('o-gain').value||2);
+  const factor =parseFloat(document.getElementById('o-factor').value||2);
+  const freq   =parseInt(document.getElementById('o-freq').value||4);
+  const init   =parseFloat(document.getElementById('o-init').value||1);
+  const minBet =getMinBet();
+  const maxCapEl=document.getElementById('o-maxcap');
+  const maxCap =(maxCapEl&&maxCapEl.value!=='')?parseFloat(maxCapEl.value):Infinity;
 
-  function betAt(r){ return ceilToStep(init * Math.pow(factor, Math.floor((r-1)/freq)), minBet); }
+  // per-number bet at round r of a sequence
+  function betAt(r){ return ceilToStep(init*Math.pow(factor,Math.floor((r-1)/freq)),minBet); }
+  // total stake per round = bet × nums
+  function stakeAt(r){ return betAt(r)*nums; }
 
-  // each simulation: run numRounds rounds continuously, track cumulative gain
-  // each round: bet betAt(r), win with prob p → gain payout*bet - bet, lose → -bet
-  // r resets to 1 after each win (new martingale sequence)
-  const trajectories = [];
-  const finalGains = [];
+  const trajectories=[];
+  const finalGains=[];
+  let bustedCount=0;
+  let totalCostAcc=0;
 
-  for(let s = 0; s < sims; s++){
-    const traj = [];
-    let cumGain = 0;
-    let seqRound = 1;   // round within current martingale sequence
-    let seqSpent = 0;   // cumulative bet within current sequence
-    let busted = false;
+  for(let s=0;s<sims;s++){
+    const traj=[];
+    let cumGain=0;
+    let seqRound=1;
+    let seqCost=0;
+    let busted=false;
 
-    for(let round = 0; round < numRounds; round++){
-      if(busted){ traj.push(cumGain); continue; }
-
-      const bet = betAt(seqRound);
-
-      // capital check: would placing this bet exceed max capital?
-      if(maxCap < Infinity && seqSpent + bet > maxCap){
-        // can't place the bet — bust, lose what was spent this sequence
-        cumGain -= seqSpent;
-        busted = true;
+    for(let round=0;round<numRounds;round++){
+      if(busted){traj.push(parseFloat(cumGain.toFixed(4)));continue;}
+      const bet=betAt(seqRound);
+      const stake=bet*nums;
+      if(maxCap<Infinity&&seqCost+stake>maxCap){
+        cumGain-=seqCost; busted=true;
         traj.push(parseFloat(cumGain.toFixed(4)));
         continue;
       }
-
-      seqSpent += bet;
-
-      if(Math.random() < p){
-        // win: net for this sequence = payout*bet - total spent this sequence
-        cumGain += gain * bet - seqSpent;
-        // reset sequence
-        seqRound = 1;
-        seqSpent = 0;
+      seqCost+=stake;
+      if(Math.random()<pWin){
+        // win: payout = gain × bet (one number wins), net = gain×bet - seqCost
+        cumGain+=gain*bet-seqCost;
+        seqRound=1; seqCost=0;
       } else {
-        // lose this round, escalate
         seqRound++;
       }
       traj.push(parseFloat(cumGain.toFixed(4)));
     }
     trajectories.push(traj);
-    finalGains.push(traj[traj.length - 1]);
+    finalGains.push(traj[traj.length-1]);
+    if(busted) bustedCount++;
+    totalCostAcc+=seqCost;
   }
 
-  // stats
-  const winningTraj = finalGains.filter(v => v > 0).length;
-  const pWinPct     = (winningTraj / sims * 100).toFixed(1);
-  const avgNet      = (finalGains.reduce((a,b)=>a+b,0) / sims).toFixed(2);
-  document.getElementById('mc-pwin').textContent   = pWinPct + '%';
-  document.getElementById('mc-avgnet').textContent = avgNet;
-  document.getElementById('mc-avgnet').style.color = parseFloat(avgNet) >= 0 ? '#1db954' : 'var(--red)';
+  const winTraj=finalGains.filter(v=>v>0).length;
+  const pWinPct=(winTraj/sims*100).toFixed(1);
+  const avgNet=(finalGains.reduce((a,b)=>a+b,0)/sims).toFixed(2);
+  const avgCostPerRound=(totalCostAcc/sims/numRounds).toFixed(2);
+  const pRuinPct=(bustedCount/sims*100).toFixed(1);
 
-  const labels = Array.from({length: numRounds}, (_,i) => i+1);
+  document.getElementById('mc-pwin').textContent=pWinPct+'%';
+  document.getElementById('mc-avgnet').textContent=avgNet;
+  document.getElementById('mc-avgnet').style.color=parseFloat(avgNet)>=0?'#1db954':'var(--red)';
+  document.getElementById('mc-avgcost').textContent=avgCostPerRound;
+  document.getElementById('mc-pruin').textContent=pRuinPct+'%';
 
-  // mean curve
-  const meanCurve = labels.map((_,i) => parseFloat((trajectories.reduce((a,t) => a+t[i],0)/sims).toFixed(4)));
+  const labels=Array.from({length:numRounds},(_,i)=>i+1);
+  const meanCurve=labels.map((_,i)=>parseFloat((trajectories.reduce((a,t)=>a+t[i],0)/sims).toFixed(4)));
 
-  // color by final gain
-  function trajColor(traj){ return traj[traj.length-1] >= 0 ? 'rgba(29,185,84,0.25)' : 'rgba(192,57,43,0.25)'; }
-  function trajBorder(traj){ return traj[traj.length-1] >= 0 ? 'rgba(29,185,84,0.6)' : 'rgba(192,57,43,0.5)'; }
+  function trajBorder(t){ return t[t.length-1]>=0?'rgba(29,185,84,0.55)':'rgba(192,57,43,0.45)'; }
 
-  const datasets = trajectories.map((traj,i) => ({
-    data: traj,
-    borderColor: trajBorder(traj),
-    backgroundColor: trajColor(traj),
-    borderWidth: 1,
-    pointRadius: 0,
-    fill: false,
-    tension: 0.1,
-    label: i === 0 ? 'Trajectoire' : '',
-    order: 2,
+  const datasets=trajectories.map((traj,i)=>({
+    data:traj, borderColor:trajBorder(traj), borderWidth:1, pointRadius:0, fill:false, tension:0.1,
+    label:i===0?'Trajectoire':'', order:2,
   }));
+  datasets.push({data:Array(numRounds).fill(0),borderColor:'rgba(255,255,255,0.15)',borderWidth:1,borderDash:[3,3],pointRadius:0,fill:false,label:'',order:1});
+  datasets.push({data:meanCurve,borderColor:'#e8a020',borderWidth:2.5,pointRadius:0,fill:false,tension:0.2,label:'Moyenne',order:0});
 
-  // zero line
-  datasets.push({ data: Array(numRounds).fill(0), borderColor: 'rgba(255,255,255,0.15)',
-    borderWidth: 1, borderDash:[3,3], pointRadius:0, fill:false, label:'', order:1 });
-
-  // mean curve on top
-  datasets.push({ data: meanCurve, borderColor: '#e8a020', borderWidth: 2.5,
-    pointRadius:0, fill:false, tension:0.2, label:'Moyenne', order:0 });
-
-  const canvas = document.getElementById('mc-chart');
-  if(mcChart){ mcChart.destroy(); mcChart = null; }
-  mcChart = new Chart(canvas, {
-    type: 'line',
-    data: { labels, datasets },
-    options: {
-      responsive: true, maintainAspectRatio: false, animation: { duration: 0 },
-      plugins: {
-        legend: { display: true, labels: { color:'#a0a0a8', font:{size:10}, boxWidth:12,
-          filter: item => item.text !== '' } },
-        tooltip: { mode:'index', intersect:false, callbacks: {
-          title: ctx => 'Round ' + ctx[0].label,
-          label: ctx => ctx.dataset.label ? ctx.dataset.label+' : '+ctx.raw : null
-        }}
+  const canvas=document.getElementById('mc-chart');
+  if(mcChart){mcChart.destroy();mcChart=null;}
+  mcChart=new Chart(canvas,{
+    type:'line',
+    data:{labels,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,animation:{duration:0},
+      plugins:{
+        legend:{display:true,labels:{color:'#a0a0a8',font:{size:10},boxWidth:12,filter:item=>item.text!==''}},
+        tooltip:{mode:'index',intersect:false,callbacks:{title:ctx=>'Round '+ctx[0].label,label:ctx=>ctx.dataset.label?ctx.dataset.label+' : '+ctx.raw:null}}
       },
-      scales: {
-        x: { ticks:{color:'#606068',font:{size:9},maxTicksLimit:10}, grid:{color:'#2a2a2d'} },
-        y: { ticks:{color:'#606068',font:{size:10}}, grid:{color:'#2a2a2d'},
-          title:{display:true,text:'Gain cumulé',color:'#606068',font:{size:10}} }
+      scales:{
+        x:{ticks:{color:'#606068',font:{size:9},maxTicksLimit:10},grid:{color:'#2a2a2d'}},
+        y:{ticks:{color:'#606068',font:{size:10}},grid:{color:'#2a2a2d'},title:{display:true,text:'Gain cumulé',color:'#606068',font:{size:10}}}
       }
     }
   });
 }
 
-
-
-
-
 // ── OPTIMIZER ──
-const CMA_PARAMS = [
-  { id:'gain',   label:'Payout',           min:1,    max:50,  step:0.5,  defVal:2   },
-  { id:'factor', label:'Multiplicateur',   min:1,    max:10,  step:0.1,  defVal:2   },
-  { id:'freq',   label:'Tours avant hausse',min:1,   max:30,  step:1,    defVal:4   },
-  { id:'init',   label:'Mise initiale',    min:0.1,  max:5,   step:0.1,  defVal:1   },
-  { id:'minbet', label:'Mise minimum',     min:0.05, max:2,   step:0.05, defVal:0.2 },
+const CMA_PARAMS=[
+  {id:'gain',   label:'Payout',             min:1,   max:50, step:0.5,  defVal:2  },
+  {id:'factor', label:'Multiplicateur',     min:1,   max:10, step:0.1,  defVal:2  },
+  {id:'freq',   label:'Tours avant hausse', min:1,   max:30, step:1,    defVal:4  },
+  {id:'init',   label:'Mise initiale',      min:0.1, max:5,  step:0.1,  defVal:1  },
+  {id:'minbet', label:'Mise minimum',       min:0.05,max:2,  step:0.05, defVal:0.2},
+  {id:'nums',   label:'Numéros / tour',     min:1,   max:18, step:1,    defVal:1  },
 ];
 
-let optimizerWorker = null;
-let optimizerResults = [];
-
+let optimizerWorker=null;
 function openOptimizer(){
-  // sync capital from o-maxcap
-  const capEl = document.getElementById('o-maxcap');
-  if(capEl && capEl.value) document.getElementById('cma-capital').value = capEl.value;
-  const roundsEl = document.getElementById('o-rounds');
-  if(roundsEl) document.getElementById('cma-rounds').value = roundsEl.value;
-
-  buildParamRows();
-  loadOptimizerState(applyOptimizerState);
-  document.getElementById('opt-modal').style.display = 'flex';
-  switchModalTab('params');
+  const capEl=document.getElementById('o-maxcap'); if(capEl&&capEl.value)document.getElementById('cma-capital').value=capEl.value;
+  const roundsEl=document.getElementById('o-rounds'); if(roundsEl)document.getElementById('cma-rounds').value=roundsEl.value;
+  buildParamRows(); loadOptimizerState(applyOptimizerState);
+  document.getElementById('opt-modal').style.display='flex'; switchModalTab('params');
 }
-
-function closeOptimizer(){
-  document.getElementById('opt-modal').style.display = 'none';
-  if(optimizerWorker){ optimizerWorker.terminate(); optimizerWorker = null; }
-  saveOptimizerState();
-}
-
+function closeOptimizer(){ document.getElementById('opt-modal').style.display='none'; if(optimizerWorker){optimizerWorker.terminate();optimizerWorker=null;} saveOptimizerState(); }
 function switchModalTab(tab){
-  ['params','results'].forEach(t => {
-    const btn = document.getElementById('modal-tab-'+t);
-    const panel = document.getElementById('modal-panel-'+t);
-    const active = t === tab;
-    btn.style.color = active ? 'var(--gold)' : 'var(--txt3)';
-    btn.style.borderBottomColor = active ? 'var(--gold)' : 'transparent';
-    panel.style.display = active ? 'flex' : 'none';
+  ['params','results'].forEach(t=>{
+    const btn=document.getElementById('modal-tab-'+t);
+    const panel=document.getElementById('modal-panel-'+t);
+    const active=t===tab;
+    btn.style.color=active?'var(--gold)':'var(--txt3)';
+    btn.style.borderBottomColor=active?'var(--gold)':'transparent';
+    panel.style.display=active?'flex':'none';
   });
 }
-
-const OPT_SLIDER_MAP = {gain:'o-gain',factor:'o-factor',freq:'o-freq',init:'o-init',minbet:'o-minbet'};
-
-function getCurrentOptVal(id){
-  const el = document.getElementById(OPT_SLIDER_MAP[id]);
-  return el ? parseFloat(el.value) : null;
-}
-
+const OPT_SLIDER_MAP={gain:'o-gain',factor:'o-factor',freq:'o-freq',init:'o-init',minbet:'o-minbet',nums:'o-nums'};
+function getCurrentOptVal(id){ const el=document.getElementById(OPT_SLIDER_MAP[id]); return el?parseFloat(el.value):null; }
 function toggleParamRow(id){
-  const checked = document.getElementById('cma-check-'+id).checked;
-  const rangeEl = document.getElementById('cma-range-'+id);
-  const fixedEl = document.getElementById('cma-fixed-'+id);
-  rangeEl.style.display = checked ? 'flex' : 'none';
-  fixedEl.style.display = checked ? 'none' : 'flex';
+  const checked=document.getElementById('cma-check-'+id).checked;
+  document.getElementById('cma-range-'+id).style.display=checked?'flex':'none';
+  document.getElementById('cma-fixed-'+id).style.display=checked?'none':'flex';
 }
-
 function buildParamRows(){
-  const container = document.getElementById('cma-param-rows');
-  container.innerHTML = '';
-  CMA_PARAMS.forEach(p => {
-    const curVal = getCurrentOptVal(p.id) ?? p.defVal;
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex;flex-direction:column;gap:4px;';
-    row.innerHTML = `
+  const container=document.getElementById('cma-param-rows'); container.innerHTML='';
+  CMA_PARAMS.forEach(p=>{
+    const curVal=getCurrentOptVal(p.id)??p.defVal;
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;flex-direction:column;gap:4px;';
+    row.innerHTML=`
       <div style="display:flex;align-items:center;gap:8px;">
-        <input type="checkbox" id="cma-check-${p.id}" checked
-          onchange="toggleParamRow('${p.id}')"
-          style="width:16px;height:16px;accent-color:var(--gold);flex-shrink:0;">
+        <input type="checkbox" id="cma-check-${p.id}" checked onchange="toggleParamRow('${p.id}')" style="width:16px;height:16px;accent-color:var(--gold);flex-shrink:0;">
         <label for="cma-check-${p.id}" style="font-size:12px;color:var(--txt2);min-width:120px;cursor:pointer;">${p.label}</label>
-
-        <!-- range inputs (shown when checked) -->
         <div id="cma-range-${p.id}" style="display:flex;align-items:center;gap:4px;flex:1;">
-          <input type="number" id="cma-min-${p.id}" value="${p.min}" step="${p.step}"
-            style="width:44px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--txt);font-size:12px;text-align:center;padding:3px 4px;outline:none;" placeholder="min">
+          <input type="number" id="cma-min-${p.id}" value="${p.min}" step="${p.step}" style="width:44px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--txt);font-size:12px;text-align:center;padding:3px 4px;outline:none;" placeholder="min">
           <span style="font-size:10px;color:var(--txt3)">→</span>
-          <input type="number" id="cma-max-${p.id}" value="${p.max}" step="${p.step}"
-            style="width:44px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--txt);font-size:12px;text-align:center;padding:3px 4px;outline:none;" placeholder="max">
+          <input type="number" id="cma-max-${p.id}" value="${p.max}" step="${p.step}" style="width:44px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--txt);font-size:12px;text-align:center;padding:3px 4px;outline:none;" placeholder="max">
           <span style="font-size:10px;color:var(--txt3)">±</span>
-          <input type="number" id="cma-step-${p.id}" value="${p.step}" step="${p.step}"
-            style="width:44px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--txt2);font-size:12px;text-align:center;padding:3px 4px;outline:none;" placeholder="pas">
+          <input type="number" id="cma-step-${p.id}" value="${p.step}" step="${p.step}" style="width:44px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--txt2);font-size:12px;text-align:center;padding:3px 4px;outline:none;" placeholder="pas">
         </div>
-
-        <!-- fixed value (shown when unchecked) -->
         <div id="cma-fixed-${p.id}" style="display:none;align-items:center;gap:4px;flex:1;">
           <span style="font-size:10px;color:var(--txt3)">Fixé :</span>
-          <input type="number" id="cma-defval-${p.id}" value="${curVal}" step="${p.step}"
-            style="width:70px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--gold);font-size:13px;text-align:center;padding:3px 4px;outline:none;">
+          <input type="number" id="cma-defval-${p.id}" value="${curVal}" step="${p.step}" style="width:70px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--gold);font-size:13px;text-align:center;padding:3px 4px;outline:none;">
         </div>
-      </div>
-    `;
+      </div>`;
     container.appendChild(row);
   });
 }
 
 function runOptimizer(){
-  if(optimizerWorker){ optimizerWorker.terminate(); optimizerWorker = null; }
-  optimizerResults = [];
-  document.getElementById('cma-results-list').innerHTML = '';
-  document.getElementById('cma-progress-bar').style.width = '0%';
-  document.getElementById('cma-status').textContent = 'Initialisation…';
-  document.getElementById('cma-gen-label').textContent = '';
-  document.getElementById('cma-best-score').textContent = 'Score meilleur : —';
+  if(optimizerWorker){optimizerWorker.terminate();optimizerWorker=null;}
+  document.getElementById('cma-results-list').innerHTML='';
+  document.getElementById('cma-progress-bar').style.width='0%';
+  document.getElementById('cma-status').textContent='Initialisation…';
+  document.getElementById('cma-gen-label').textContent='';
+  document.getElementById('cma-best-score').textContent='Score meilleur : —';
   switchModalTab('results');
 
-  const capital  = parseFloat(document.getElementById('cma-capital').value) || Infinity;
-  const rounds   = parseInt(document.getElementById('cma-rounds').value)    || 100;
-  const maxGens       = parseInt(document.getElementById('cma-gens').value)       || 100;
+  const capital=parseFloat(document.getElementById('cma-capital').value)||Infinity;
+  const rounds=parseInt(document.getElementById('cma-rounds').value)||100;
+  const maxGens=parseInt(document.getElementById('cma-gens').value)||100;
 
+  const activeParams=CMA_PARAMS.filter(p=>document.getElementById('cma-check-'+p.id).checked)
+    .map(p=>({id:p.id,label:p.label,step:parseFloat(document.getElementById('cma-step-'+p.id).value)||p.step,min:parseFloat(document.getElementById('cma-min-'+p.id).value),max:parseFloat(document.getElementById('cma-max-'+p.id).value),defVal:getCurrentOptVal(p.id)??p.defVal}));
 
-  const activeParams = CMA_PARAMS.filter(p => document.getElementById('cma-check-'+p.id).checked)
-    .map(p => ({
-      id: p.id, label: p.label,
-      step: parseFloat(document.getElementById('cma-step-'+p.id).value) || p.step,
-      min: parseFloat(document.getElementById('cma-min-'+p.id).value),
-      max: parseFloat(document.getElementById('cma-max-'+p.id).value),
-      defVal: getCurrentOptVal(p.id) ?? p.defVal,
-    }));
+  const fixedParams={};
+  CMA_PARAMS.filter(p=>!document.getElementById('cma-check-'+p.id).checked)
+    .forEach(p=>{const el=document.getElementById('cma-defval-'+p.id);fixedParams[p.id]=el?parseFloat(el.value):p.defVal;});
 
-  const fixedParams = {};
-  CMA_PARAMS.filter(p => !document.getElementById('cma-check-'+p.id).checked)
-    .forEach(p => {
-      const el = document.getElementById('cma-defval-'+p.id);
-      fixedParams[p.id] = el ? parseFloat(el.value) : p.defVal;
-    });
+  // Worker: evaluates all grid combos
+  // Cost per round = bet × nums; reward = gain × bet (one number wins)
+  const workerCode=`
+const ceilToStep=(val,step)=>Math.ceil(val/step)*step;
+const betAt=(r,init,factor,freq,minbet)=>ceilToStep(init*Math.pow(factor,Math.floor((r-1)/freq)),minbet);
 
-  const workerCode = `
-const betAt = (r, init, factor, freq, minbet) => {
-  const step = Math.floor((r-1)/freq);
-  const raw = init * Math.pow(factor, step);
-  return Math.ceil(raw / minbet) * minbet;
-};
-
-function evaluate(params, capital, rounds){
-  const {gain, factor, freq, init, minbet} = params;
-  let cumCost = 0;
-  let worstNet = Infinity;
-  let survivalRounds = 0;
-  for(let r = 1; r <= rounds; r++){
-    const bet = betAt(r, init, factor, freq, minbet);
-    cumCost += bet;
-    const netIfWin = gain * bet - cumCost;
-    if(netIfWin < worstNet) worstNet = netIfWin;
-    if(capital < Infinity && cumCost > capital) break;
-    survivalRounds = r;
+function evaluate(params,capital,rounds){
+  const {gain,factor,freq,init,minbet,nums}=params;
+  let cumCost=0,worstNet=Infinity,survivalRounds=0;
+  for(let r=1;r<=rounds;r++){
+    const bet=betAt(r,init,factor,freq,minbet);
+    const stake=bet*nums;
+    cumCost+=stake;
+    // net gain if winning at this round: payout - total cost of sequence
+    const netIfWin=gain*bet-cumCost;
+    if(netIfWin<worstNet) worstNet=netIfWin;
+    if(capital<Infinity&&cumCost>capital) break;
+    survivalRounds=r;
   }
-  // step 1: binary filter
-  if(worstNet <= 0) return -1;
-  // step 2: classify by survival ratio
-  return survivalRounds / rounds;
+  if(worstNet<=0) return -1;
+  return survivalRounds/rounds;
 }
 
-self.onmessage = function(e){
-  const {activeParams, fixedParams, capital, rounds, maxGens} = e.data;
-  const axes = activeParams.map(p => {
-    const steps = Math.round((p.max - p.min) / p.step);
-    return Array.from({length: steps + 1}, (_, i) => +(p.min + i * p.step).toFixed(6));
+self.onmessage=function(e){
+  const {activeParams,fixedParams,capital,rounds,maxGens}=e.data;
+  const axes=activeParams.map(p=>{
+    const steps=Math.round((p.max-p.min)/p.step);
+    return Array.from({length:steps+1},(_,i)=>+(p.min+i*p.step).toFixed(6));
   });
-
-  function* cartesian(arrays, idx, current){
-    if(idx === arrays.length){ yield [...current]; return; }
-    for(const v of arrays[idx]){ current[idx] = v; yield* cartesian(arrays, idx+1, current); }
+  function* cartesian(arrays,idx,current){
+    if(idx===arrays.length){yield[...current];return;}
+    for(const v of arrays[idx]){current[idx]=v;yield* cartesian(arrays,idx+1,current);}
   }
-
-  let bestScore = -Infinity, bestParams = null;
-  let evaluated = 0;
-  const total = axes.reduce((a, ax) => a * ax.length, 1);
-  const reportEvery = Math.max(1, Math.floor(total / 100));
-
-  for(const combo of cartesian(axes, 0, new Array(activeParams.length))){
-    const params = {...fixedParams};
-    activeParams.forEach((p, i) => params[p.id] = combo[i]);
-    const score = evaluate(params, capital, rounds);
+  let bestScore=-Infinity,bestParams=null,evaluated=0;
+  const total=axes.reduce((a,ax)=>a*ax.length,1);
+  const reportEvery=Math.max(1,Math.floor(total/100));
+  for(const combo of cartesian(axes,0,new Array(activeParams.length))){
+    const params={...fixedParams};
+    // ensure nums is integer
+    activeParams.forEach((p,i)=>params[p.id]=p.id==='nums'||p.id==='freq'?Math.round(combo[i]):combo[i]);
+    const score=evaluate(params,capital,rounds);
     evaluated++;
-    if(score > bestScore){ bestScore = score; bestParams = {...params}; }
-    if(evaluated % reportEvery === 0 || evaluated === total){
-      const gen = Math.round(evaluated / total * 100);
-      if(bestScore > 0 && bestParams){
-        const topParams = {};
-        activeParams.forEach(p => topParams[p.id] = +bestParams[p.id].toFixed(3));
-        Object.assign(topParams, fixedParams);
-        self.postMessage({type:'progress', gen, maxGens, bestScore: +bestScore.toFixed(4),
-          topParams, topScore: +bestScore.toFixed(4), feasible: true});
+    if(score>bestScore){bestScore=score;bestParams={...params};}
+    if(evaluated%reportEvery===0||evaluated===total){
+      const gen=Math.round(evaluated/total*100);
+      if(bestScore>0&&bestParams){
+        const topParams={};
+        activeParams.forEach(p=>topParams[p.id]=p.id==='nums'||p.id==='freq'?Math.round(bestParams[p.id]):+bestParams[p.id].toFixed(3));
+        Object.assign(topParams,fixedParams);
+        self.postMessage({type:'progress',gen,maxGens,bestScore:+bestScore.toFixed(4),topParams,topScore:+bestScore.toFixed(4),feasible:true});
       } else {
-        self.postMessage({type:'progress', gen, maxGens, bestScore: -1,
-          topParams: null, topScore: null, feasible: false});
+        self.postMessage({type:'progress',gen,maxGens,bestScore:-1,topParams:null,topScore:null,feasible:false});
       }
     }
   }
-  self.postMessage({type:'done', results:[]});
-};
-`;
+  self.postMessage({type:'done',results:[]});
+};`;
 
-  const blob = new Blob([workerCode], {type:'application/javascript'});
-  optimizerWorker = new Worker(URL.createObjectURL(blob));
-
-  const pWin = (() => {
-    const picked = parseInt(document.getElementById('mc-picked').value) || 1;
-    const total  = parseInt(document.getElementById('mc-total').value)  || 37;
-    return Math.min(picked, total-1) / total;
-  })();
-
-  optimizerWorker.postMessage({activeParams, fixedParams, capital, rounds, maxGens, pWin});
-
-  optimizerWorker.onmessage = e => {
-    const d = e.data;
-    if(d.type === 'progress'){
-      const pct = (d.gen / d.maxGens * 100).toFixed(0);
-      document.getElementById('cma-progress-bar').style.width = pct + '%';
-      document.getElementById('cma-status').textContent = 'Optimisation en cours…';
-      document.getElementById('cma-gen-label').textContent = 'Gén. ' + d.gen + ' / ' + d.maxGens;
-      document.getElementById('cma-best-score').textContent = 'Score meilleur : ' + d.bestScore;
-      if(d.feasible && d.topParams){
-        addResultCard(d.gen, d.topScore, d.topParams, activeParams, fixedParams);
-      }
-    } else if(d.type === 'done'){
-      document.getElementById('cma-status').textContent = '✓ Terminé';
-      document.getElementById('cma-progress-bar').style.width = '100%';
-      document.getElementById('cma-run-btn').disabled = false;
-      optimizerWorker = null;
+  const blob=new Blob([workerCode],{type:'application/javascript'});
+  optimizerWorker=new Worker(URL.createObjectURL(blob));
+  optimizerWorker.postMessage({activeParams,fixedParams,capital,rounds,maxGens});
+  optimizerWorker.onmessage=e=>{
+    const d=e.data;
+    if(d.type==='progress'){
+      const pct=(d.gen/d.maxGens*100).toFixed(0);
+      document.getElementById('cma-progress-bar').style.width=pct+'%';
+      document.getElementById('cma-status').textContent='Optimisation en cours…';
+      document.getElementById('cma-gen-label').textContent='Gén. '+d.gen+' / '+d.maxGens;
+      document.getElementById('cma-best-score').textContent='Score meilleur : '+d.bestScore;
+      if(d.feasible&&d.topParams) addResultCard(d.gen,d.topScore,d.topParams,activeParams,fixedParams);
+    } else if(d.type==='done'){
+      document.getElementById('cma-status').textContent='✓ Terminé';
+      document.getElementById('cma-progress-bar').style.width='100%';
+      document.getElementById('cma-run-btn').disabled=false;
+      optimizerWorker=null;
     }
   };
-  document.getElementById('cma-run-btn').disabled = true;
+  document.getElementById('cma-run-btn').disabled=true;
   saveOptimizerState();
 }
 
-function addResultCard(gen, score, params, activeParams, fixedParams){
-  const list = document.getElementById('cma-results-list');
-  if(list.querySelector('[data-placeholder]')) list.innerHTML = '';
-
-  const card = document.createElement('div');
-  card.style.cssText = 'background:var(--bg3);border-radius:10px;padding:10px 12px;cursor:pointer;border:1.5px solid transparent;transition:border-color 0.15s;';
-  card.onmouseenter = () => card.style.borderColor = 'var(--gold)';
-  card.onmouseleave = () => card.style.borderColor = 'transparent';
-
-  const paramsHTML = activeParams.map(p =>
-    `<span style="background:var(--bg2);border-radius:5px;padding:2px 7px;font-size:12px;color:var(--txt)">${p.label}: <b>${(+params[p.id]).toFixed(2)}</b></span>`
-  ).join('');
-
-  card.innerHTML = `
+function addResultCard(gen,score,params,activeParams,fixedParams){
+  const list=document.getElementById('cma-results-list');
+  if(list.querySelector('[data-placeholder]')) list.innerHTML='';
+  const card=document.createElement('div');
+  card.style.cssText='background:var(--bg3);border-radius:10px;padding:10px 12px;cursor:pointer;border:1.5px solid transparent;transition:border-color 0.15s;';
+  card.onmouseenter=()=>card.style.borderColor='var(--gold)';
+  card.onmouseleave=()=>card.style.borderColor='transparent';
+  const paramsHTML=activeParams.map(p=>{
+    const v=p.id==='nums'||p.id==='freq'?Math.round(params[p.id]):(+params[p.id]).toFixed(2);
+    return `<span style="background:var(--bg2);border-radius:5px;padding:2px 7px;font-size:12px;color:var(--txt)">${p.label}: <b>${v}</b></span>`;
+  }).join('');
+  card.innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
       <span style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.07em">Gén. ${gen}</span>
       <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold)">Score ${score}</span>
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:5px;">${paramsHTML}</div>
-    <div style="margin-top:8px;font-size:11px;color:var(--txt3);text-align:center;">Tap pour appliquer</div>
-  `;
-  card.onclick = () => applyOptimizerResult(params, activeParams, fixedParams);
-  list.insertBefore(card, list.firstChild);
+    <div style="margin-top:8px;font-size:11px;color:var(--txt3);text-align:center;">Tap pour appliquer</div>`;
+  card.onclick=()=>applyOptimizerResult(params,activeParams,fixedParams);
+  list.insertBefore(card,list.firstChild);
 }
 
-function applyOptimizerResult(params, activeParams, fixedParams){
-  if(!params || !activeParams) return;
-  fixedParams = fixedParams || {};
-  const map = {gain:'o-gain', factor:'o-factor', freq:'o-freq', init:'o-init', minbet:'o-minbet'};
-  // sync rounds and capital
-  const cmaRounds = document.getElementById('cma-rounds');
-  const oRounds   = document.getElementById('o-rounds');
-  if(cmaRounds && oRounds){ oRounds.value = cmaRounds.value; }
-  const cmaCapital = document.getElementById('cma-capital');
-  const oMaxcap    = document.getElementById('o-maxcap');
-  if(cmaCapital && oMaxcap){ oMaxcap.value = cmaCapital.value; }
-  // apply optimized params
-  activeParams.forEach(p => {
-    const el = document.getElementById(map[p.id]);
-    if(el){ el.value = (+params[p.id]).toFixed(p.id==='freq'?0:2); }
+function applyOptimizerResult(params,activeParams,fixedParams){
+  if(!params||!activeParams) return;
+  fixedParams=fixedParams||{};
+  const map={gain:'o-gain',factor:'o-factor',freq:'o-freq',init:'o-init',minbet:'o-minbet',nums:'o-nums'};
+  const cmaRounds=document.getElementById('cma-rounds');
+  const oRounds=document.getElementById('o-rounds');
+  if(cmaRounds&&oRounds) oRounds.value=cmaRounds.value;
+  const cmaCapital=document.getElementById('cma-capital');
+  const oMaxcap=document.getElementById('o-maxcap');
+  if(cmaCapital&&oMaxcap) oMaxcap.value=cmaCapital.value;
+  activeParams.forEach(p=>{
+    const el=document.getElementById(map[p.id]);
+    if(el){ el.value=p.id==='nums'||p.id==='freq'?Math.round(params[p.id]):(+params[p.id]).toFixed(2); }
   });
-  // apply fixed params
-  if(fixedParams){
-    Object.entries(fixedParams).forEach(([id, val]) => {
-      const el = document.getElementById(map[id]);
-      if(el){ el.value = (+val).toFixed(id==='freq'?0:2); }
-    });
-  }
-  renderOpt();
-  closeOptimizer();
+  Object.entries(fixedParams).forEach(([id,val])=>{
+    const el=document.getElementById(map[id]);
+    if(el){ el.value=id==='nums'||id==='freq'?Math.round(val):(+val).toFixed(2); }
+  });
+  renderOpt(); closeOptimizer();
 }
-
-buildGrid(); updateHistory(); updateRoundDisplay(); updateHotNums();
-document.getElementById('ok-btn').onclick = submitTurn;
-loadState(applyState);
-loadOptState(s => { applyOptState(s); });
 
 // ── OPT TAB ──
-let optChart = null;
-let costChart = null;
+let optChart=null,costChart=null;
 
 function renderOpt(){
-  const gain   = parseFloat(document.getElementById('o-gain').value);
-  const factor = parseFloat(document.getElementById('o-factor').value);
-  const freq   = parseInt(document.getElementById('o-freq').value);
-  const minBet = getMinBet();
+  const gain   =parseFloat(document.getElementById('o-gain').value);
+  const factor =parseFloat(document.getElementById('o-factor').value);
+  const freq   =parseInt(document.getElementById('o-freq').value);
+  const minBet =getMinBet();
+  const nums   =getNumsPerRound();
 
   updateRoundDisplay();
-  document.getElementById('o-gain-v').textContent   = gain + '×';
-  document.getElementById('o-factor-v').textContent  = factor.toFixed(1);
-  document.getElementById('o-freq-v').textContent    = freq;
-  document.getElementById('o-minbet-v').textContent  = minBet.toFixed(2);
-  // keep mise initiale slider min in sync with minBet
-  const initSlider = document.getElementById('o-init');
-  initSlider.min = minBet;
-  initSlider.step = minBet;
-  if(parseFloat(initSlider.value) < minBet){ initSlider.value = minBet; }
-  document.getElementById('o-init-v').textContent = parseFloat(initSlider.value).toFixed(2);
-  const init = parseFloat(initSlider.value);
+  document.getElementById('o-gain-v').textContent=gain+'×';
+  document.getElementById('o-factor-v').textContent=factor.toFixed(1);
+  document.getElementById('o-freq-v').textContent=freq;
+  document.getElementById('o-minbet-v').textContent=minBet.toFixed(2);
+  document.getElementById('o-nums-v').textContent=nums;
 
-  function betAt(r) {
-    const s = Math.floor((r - 1) / freq);
-    return ceilToStep(init * Math.pow(factor, s), minBet);
-  }
+  const initSlider=document.getElementById('o-init');
+  initSlider.min=minBet; initSlider.step=minBet;
+  if(parseFloat(initSlider.value)<minBet) initSlider.value=minBet;
+  document.getElementById('o-init-v').textContent=parseFloat(initSlider.value).toFixed(2);
+  const init=parseFloat(initSlider.value);
 
-  const N = parseInt(document.getElementById('o-rounds').value) || 100;
-  document.getElementById('o-rounds-v').textContent = N;
-  const labels = [], netGains = [];
-  let totalCost = 0, cumLost = 0;
-  let bestGain = -Infinity, worstGain = Infinity, breakEven = null;
+  // stake info line
+  const bet1=ceilToStep(init,minBet);
+  document.getElementById('o-stake-info').textContent=
+    `Mise par numéro : ${bet1.toFixed(2)}  ×  ${nums} numéro${nums>1?'s':''}  =  ${(bet1*nums).toFixed(2)} total/tour`;
 
-  for(let r = 1; r <= N; r++){
-    const bet = betAt(r);
-    // net gain if win at round r = gain*bet - cumCost(r)
-    // cumCost(r) = cumCost(r-1) + bet(r), maintained as running sum
-    const net = gain * bet - (cumLost + bet);
+  function betAt(r){ return ceilToStep(init*Math.pow(factor,Math.floor((r-1)/freq)),minBet); }
+  function stakeAt(r){ return betAt(r)*nums; }
+
+  const N=parseInt(document.getElementById('o-rounds').value)||100;
+  document.getElementById('o-rounds-v').textContent=N;
+
+  const labels=[],netGains=[];
+  let cumLost=0,bestGain=-Infinity,worstGain=Infinity,breakEven=null;
+
+  for(let r=1;r<=N;r++){
+    const bet=betAt(r);
+    const stake=stakeAt(r);
+    // net = payout (gain × bet, one number) - cumulative cost (stake × rounds so far)
+    const net=gain*bet-(cumLost+stake);
     labels.push(r);
     netGains.push(parseFloat(net.toFixed(4)));
-    if(net > bestGain) bestGain = net;
-    if(net < worstGain) worstGain = net;
-    if(breakEven === null && net >= 0) breakEven = r;
-    cumLost += bet;
-    if(r === N) totalCost = cumLost;
+    if(net>bestGain) bestGain=net;
+    if(net<worstGain) worstGain=net;
+    if(breakEven===null&&net>=0) breakEven=r;
+    cumLost+=stake;
   }
 
-  document.getElementById('o-best').textContent  = bestGain === -Infinity ? '—' : bestGain.toFixed(2);
-  document.getElementById('o-worst').textContent = worstGain === Infinity ? '—' : worstGain.toFixed(2);
-  document.getElementById('o-break').textContent = breakEven !== null ? 'Tour ' + breakEven : 'Jamais';
-  document.getElementById('o-cost').textContent  = totalCost.toFixed(2);
+  document.getElementById('o-best').textContent=bestGain===-Infinity?'—':bestGain.toFixed(2);
+  document.getElementById('o-worst').textContent=worstGain===Infinity?'—':worstGain.toFixed(2);
+  document.getElementById('o-break').textContent=breakEven!==null?'Tour '+breakEven:'Jamais';
+  document.getElementById('o-cost').textContent=cumLost.toFixed(2);
 
-  // colors per point: green if positive, red if negative
-  const ptColors = netGains.map(v => v >= 0 ? '#1db954' : '#c0392b');
+  const ptColors=netGains.map(v=>v>=0?'#1db954':'#c0392b');
 
-  const canvas = document.getElementById('o-chart');
-  if(optChart){ optChart.destroy(); optChart = null; }
-  optChart = new Chart(canvas, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Gain net',
-        data: netGains,
-        backgroundColor: ptColors,
-        borderRadius: 2,
-        borderSkipped: false,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: { duration: 200 },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            title: ctx => 'Tour ' + ctx[0].label,
-            label: ctx => 'Net : ' + ctx.raw.toFixed(3)
-          }
-        }
-      },
-      scales: {
-        x: {
-          ticks: { color: '#606068', font: { size: 10 }, maxTicksLimit: 10 },
-          grid: { color: '#2a2a2d' }
-        },
-        y: {
-          ticks: { color: '#606068', font: { size: 10 } },
-          grid: { color: '#2a2a2d' },
-          border: { dash: [3,3] }
-        }
+  const canvas=document.getElementById('o-chart');
+  if(optChart){optChart.destroy();optChart=null;}
+  optChart=new Chart(canvas,{
+    type:'bar',
+    data:{labels,datasets:[{label:'Gain net',data:netGains,backgroundColor:ptColors,borderRadius:2,borderSkipped:false}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,animation:{duration:200},
+      plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>'Tour '+ctx[0].label,label:ctx=>'Net : '+ctx.raw.toFixed(3)}}},
+      scales:{
+        x:{ticks:{color:'#606068',font:{size:10},maxTicksLimit:10},grid:{color:'#2a2a2d'}},
+        y:{ticks:{color:'#606068',font:{size:10}},grid:{color:'#2a2a2d'},border:{dash:[3,3]}}
       }
     }
   });
 
-  // Build cumulative cost series (all rounds are losses)
-  const cumCosts = [];
-  let running = 0;
-  for(let r = 1; r <= N; r++){
-    running += betAt(r);
-    cumCosts.push(parseFloat(running.toFixed(4)));
-  }
+  // cumulative cost chart (cost = sum of stake per round = bet×nums per round)
+  const cumCosts=[];
+  let running=0;
+  for(let r=1;r<=N;r++){ running+=stakeAt(r); cumCosts.push(parseFloat(running.toFixed(4))); }
 
-  const maxCapEl = document.getElementById('o-maxcap');
-  const maxCap = maxCapEl && maxCapEl.value !== '' ? parseFloat(maxCapEl.value) : null;
+  const maxCapEl=document.getElementById('o-maxcap');
+  const maxCap=maxCapEl&&maxCapEl.value!==''?parseFloat(maxCapEl.value):null;
 
-  // find first round where cumulative cost exceeds capital
-  let ruinRound = null;
-  if(maxCap !== null && maxCap > 0){
-    for(let i = 0; i < cumCosts.length; i++){
-      if(cumCosts[i] > maxCap){ ruinRound = i + 1; break; }
-    }
-  }
+  let ruinRound=null;
+  if(maxCap!==null&&maxCap>0){ for(let i=0;i<cumCosts.length;i++){ if(cumCosts[i]>maxCap){ruinRound=i+1;break;} } }
 
-  const datasets = [{
-    label: 'Mise cumulée',
-    data: cumCosts,
-    borderColor: '#e8a020',
-    backgroundColor: 'rgba(232,160,32,0.08)',
-    borderWidth: 2,
-    pointRadius: 0,
-    fill: true,
-    tension: 0.1,
-    order: 1,
+  const datasets=[{
+    label:'Mise cumulée',data:cumCosts,borderColor:'#e8a020',backgroundColor:'rgba(232,160,32,0.08)',
+    borderWidth:2,pointRadius:0,fill:true,tension:0.1,order:1
   }];
-
-  if(maxCap !== null && maxCap > 0){
-    datasets.push({
-      label: 'Capital max',
-      data: Array(N).fill(maxCap),
-      borderColor: '#c0392b',
-      borderWidth: 2,
-      borderDash: [6, 4],
-      pointRadius: 0,
-      fill: false,
-      order: 0,
-    });
+  if(maxCap!==null&&maxCap>0){
+    datasets.push({label:'Capital max',data:Array(N).fill(maxCap),borderColor:'#c0392b',borderWidth:2,borderDash:[6,4],pointRadius:0,fill:false,order:0});
+  }
+  if(ruinRound!==null){
+    const ruinSpike=Array(N).fill(null);
+    ruinSpike[ruinRound-1]=cumCosts[ruinRound-1];
+    datasets.push({label:'Ruine',data:ruinSpike,borderColor:'#c0392b',backgroundColor:'#c0392b',pointRadius:ctx=>ctx.dataIndex===ruinRound-1?7:0,pointStyle:'crossRot',showLine:false,order:-1});
   }
 
-  // ruin round marker: vertical spike dataset
-  if(ruinRound !== null){
-    const ruinSpike = Array(N).fill(null);
-    ruinSpike[ruinRound - 1] = cumCosts[ruinRound - 1];
-    datasets.push({
-      label: 'Ruine',
-      data: ruinSpike,
-      borderColor: '#c0392b',
-      backgroundColor: '#c0392b',
-      pointRadius: ctx => ctx.dataIndex === ruinRound - 1 ? 7 : 0,
-      pointStyle: 'crossRot',
-      showLine: false,
-      order: -1,
-    });
-  }
-
-  const costCanvas = document.getElementById('o-cost-chart');
-  if(costChart){ costChart.destroy(); costChart = null; }
-  costChart = new Chart(costCanvas, {
-    type: 'line',
-    data: { labels, datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: { duration: 200 },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            title: ctx => 'Tour ' + ctx[0].label,
-            label: ctx => {
-              if(ctx.dataset.label === 'Capital max') return 'Capital max : ' + ctx.raw.toFixed(2);
-              if(ctx.dataset.label === 'Ruine') return '⚠ Ruine ici';
-              return 'Investi : ' + ctx.raw.toFixed(3);
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          ticks: { color: '#606068', font: { size: 10 }, maxTicksLimit: 10 },
-          grid: { color: '#2a2a2d' }
-        },
-        y: {
-          ticks: { color: '#606068', font: { size: 10 } },
-          grid: { color: '#2a2a2d' },
-          border: { dash: [3,3] }
-        }
+  const costCanvas=document.getElementById('o-cost-chart');
+  if(costChart){costChart.destroy();costChart=null;}
+  costChart=new Chart(costCanvas,{
+    type:'line',
+    data:{labels,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,animation:{duration:200},
+      plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>'Tour '+ctx[0].label,label:ctx=>{if(ctx.dataset.label==='Capital max')return 'Capital max : '+ctx.raw.toFixed(2);if(ctx.dataset.label==='Ruine')return '⚠ Ruine ici';return 'Investi : '+ctx.raw.toFixed(3);}}}},
+      scales:{
+        x:{ticks:{color:'#606068',font:{size:10},maxTicksLimit:10},grid:{color:'#2a2a2d'}},
+        y:{ticks:{color:'#606068',font:{size:10}},grid:{color:'#2a2a2d'},border:{dash:[3,3]}}
       }
     }
   });
 
-  // show ruin round info below chart
-  const ruinEl = document.getElementById('o-ruin-msg');
-  if(ruinRound !== null){
-    ruinEl.style.color = '#c0392b';
-    ruinEl.textContent = '⚠ Capital épuisé au tour ' + ruinRound;
-  } else if(maxCap !== null && maxCap > 0){
-    ruinEl.style.color = '#1db954';
-    ruinEl.textContent = '✓ Capital suffisant sur ' + N + ' tours';
-  } else {
-    ruinEl.textContent = '';
-  }
+  const ruinEl=document.getElementById('o-ruin-msg');
+  if(ruinRound!==null){ ruinEl.style.color='#c0392b'; ruinEl.textContent='⚠ Capital épuisé au tour '+ruinRound; }
+  else if(maxCap!==null&&maxCap>0){ ruinEl.style.color='#1db954'; ruinEl.textContent='✓ Capital suffisant sur '+N+' tours'; }
+  else ruinEl.textContent='';
+
   saveOptState();
+  // sync MC picked slider with o-nums
+  const mcPicked=document.getElementById('mc-picked');
+  if(mcPicked){ mcPicked.value=nums; document.getElementById('mc-picked-v').textContent=nums; }
   updateMC();
 }
+
+// ── INIT ──
+buildGrid();
+updateHistory();
+updateRoundDisplay();
+updateHotNums();
+document.getElementById('ok-btn').onclick=submitTurn;
+loadState(applyState);
+loadOptState(s=>{ applyOptState(s); });
 
 </script>
 </body>
