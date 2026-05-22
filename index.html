@@ -61,7 +61,6 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
 .hist-chip.red { background: var(--red); color: #fff; }
 .hist-chip.blk { background: #2a2a2a; color: #fff; outline: 1px solid #555; }
 .hist-chip.grn { background: var(--grn); color: #fff; }
-/* multi-number group chip in history */
 .hist-group { display: flex; gap: 2px; align-items: center; flex-shrink: 0; border: 1px solid var(--border); border-radius: 8px; padding: 2px 3px; background: var(--bg2); }
 .round-counter-section { flex-shrink: 0; background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .round-left { display: flex; flex-direction: column; gap: 2px; }
@@ -75,10 +74,13 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
 .hot-section { flex-shrink: 0; background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; margin-bottom: 4px; }
 .hot-title { font-size: 11px; color: var(--txt3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
 .hot-nums { display: flex; flex-wrap: wrap; gap: 7px; }
-.hot-chip { width: 38px; height: 38px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 18px; flex-shrink: 0; }
+.hot-chip { min-width: 38px; height: 38px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 16px; flex-shrink: 0; padding: 0 8px; }
 .hot-chip.red { background: var(--red); color: #fff; }
 .hot-chip.blk { background: #2a2a2a; color: #fff; outline: 1px solid #555; }
 .hot-chip.grn { background: var(--grn); color: #fff; }
+.hot-chip.dz1 { background: #1a3a6a; color: #6ab0ff; border: 1px solid #2a5aa0; }
+.hot-chip.dz2 { background: #2a1a5a; color: #b090ff; border: 1px solid #5a3aa0; }
+.hot-chip.dz3 { background: #1a4a3a; color: #70d0a0; border: 1px solid #2a7a5a; }
 .hot-empty { font-size: 13px; color: var(--txt3); }
 .stats-inner { padding: 14px 12px; display: flex; flex-direction: column; gap: 14px; }
 .stat-card { background: var(--bg2); border-radius: 12px; padding: 14px 16px; }
@@ -104,18 +106,12 @@ html, body { height: 100%; background: var(--bg); color: var(--txt); font-family
 .chip-sm.blk { background: #2a2a2a; color: #fff; outline: 1px solid #555; }
 .chip-sm.grn { background: var(--grn); color: #fff; }
 .empty-msg { color: var(--txt2); font-size: 15px; text-align: center; padding: 3rem 0; }
-.play-inner { display: flex; flex-direction: column; padding: 10px 12px 12px; gap: 10px; flex: 1; }
-.play-block { background: var(--bg2); border-radius: 14px; padding: 14px 16px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
-.play-block-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.09em; color: var(--txt3); margin-bottom: 10px; flex-shrink: 0; }
-.play-color-badge { display: inline-flex; align-items: center; gap: 12px; padding: 14px 24px; border-radius: 12px; font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 0.06em; width: 100%; justify-content: center; }
-.play-color-badge.red { background: var(--red); color: #fff; }
-.play-color-badge.blk { background: #2a2a2a; color: #fff; border: 1px solid #444; }
-.play-no-signal { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--txt3); letter-spacing: 0.1em; }
-.play-dozen-badge { display: block; padding: 14px 20px; border-radius: 12px; background: var(--bg3); border: 1px solid var(--border); font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 0.06em; color: var(--txt); text-align: center; width: 100%; }
-.play-empty { font-size: 16px; color: var(--txt2); text-align: center; margin: auto; padding: 2rem 0; }
-/* multi-select count pill */
 .sel-count-pill { display: inline-flex; align-items: center; gap: 6px; background: var(--bg3); border: 1.5px solid var(--border); border-radius: 20px; padding: 3px 12px; font-size: 13px; color: var(--txt2); }
 .sel-count-pill .pill-num { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--gold); }
+/* Mode selector */
+.mode-selector { display: flex; gap: 6px; background: var(--bg3); border-radius: 10px; padding: 5px; }
+.mode-btn { flex: 1; padding: 8px 4px; font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 0.07em; border: none; border-radius: 7px; background: transparent; color: var(--txt3); cursor: pointer; transition: background 0.15s, color 0.15s; }
+.mode-btn.active { background: var(--bg2); color: var(--gold); border: 1.5px solid var(--border); }
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 </style>
@@ -126,7 +122,6 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
   <div class="tabs">
     <button class="tab active" onclick="switchTab('entry')">Entry</button>
     <button class="tab" onclick="switchTab('stats')">Stats</button>
-    <button class="tab" onclick="switchTab('play')">Play</button>
     <button class="tab" onclick="switchTab('opt')">Opt</button>
   </div>
 
@@ -140,7 +135,7 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
           ＋ Nouvelle partie
         </button>
         <div id="play-badge" style="display:none;align-items:center;padding:0 12px;background:#1a2a1a;border:1.5px solid #2a5a2a;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:16px;color:#1db954;white-space:nowrap;">
-          ▶ PARTIE EN COURS
+          ▶ EN COURS
         </div>
       </div>
       <!-- Init + Mic -->
@@ -164,7 +159,6 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
 
       <!-- SELECTION DISPLAY + CONFIRM -->
       <div class="sel-confirm">
-        <!-- shows selected set + count vs limit -->
         <div id="sel-display" style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;min-height:30px;">
           <span style="color:var(--txt3);font-size:14px">Aucun numéro sélectionné</span>
         </div>
@@ -188,7 +182,6 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
               <span style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.07em">Mise ×</span>
               <span id="round-cycle" style="font-family:'Bebas Neue',sans-serif;font-size:42px;line-height:1;color:var(--gold)">1.0</span>
             </div>
-            <!-- Total stake indicator -->
             <div style="display:flex;flex-direction:column;align-items:center;gap:1px">
               <span style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.07em">Mise tot.</span>
               <span id="round-total-stake" style="font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;color:var(--txt2)">1.0</span>
@@ -201,9 +194,10 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
 
       <!-- HOT SECTION -->
       <div class="hot-section">
-        <div class="hot-title" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-          <span>Numéros chauds</span>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+          <span style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em;">Chauds</span>
           <span class="count-badge" id="hot-count">0 tours</span>
+          <span id="hot-mode-label" style="font-size:11px;color:var(--gold);padding:1px 8px;border-radius:5px;background:rgba(232,160,32,0.1);border:1px solid rgba(232,160,32,0.2);">Numéros</span>
           <label style="display:flex;align-items:center;gap:5px;margin-left:auto;font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.07em;cursor:default;">
             Fenêtre
             <input type="number" id="hot-window" min="1" max="500" step="1" value="30"
@@ -221,14 +215,20 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
     <div class="stats-inner" id="stats-content"></div>
   </div>
 
-  <!-- ══════════════════ PLAY ══════════════════ -->
-  <div id="panel-play" class="panel">
-    <div class="play-inner" id="play-content"></div>
-  </div>
-
   <!-- ══════════════════ OPT ══════════════════ -->
   <div id="panel-opt" class="panel">
     <div style="padding:14px 12px;display:flex;flex-direction:column;gap:12px;flex:1;min-height:0;">
+
+      <!-- MODE SELECTOR — top of Opt -->
+      <div style="background:var(--bg2);border-radius:12px;padding:12px 14px;">
+        <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">Mode de jeu</div>
+        <div class="mode-selector" id="mode-selector">
+          <button class="mode-btn active" data-mode="numeros" onclick="setMode('numeros')">🔢 Numéros</button>
+          <button class="mode-btn" data-mode="douzaines" onclick="setMode('douzaines')">3 Douzaines</button>
+          <button class="mode-btn" data-mode="couleurs" onclick="setMode('couleurs')">🔴 Couleurs</button>
+        </div>
+        <div id="mode-desc" style="margin-top:8px;font-size:11px;color:var(--txt3);text-align:center;min-height:14px;"></div>
+      </div>
 
       <!-- Sliders -->
       <div style="background:var(--bg2);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;">
@@ -242,7 +242,6 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
           <input type="range" id="o-rounds" min="10" max="500" step="10" value="100" oninput="renderOpt()" style="flex:1">
           <span style="font-size:13px;font-weight:600;min-width:36px;text-align:right" id="o-rounds-v">100</span>
         </div>
-
         <div style="display:flex;align-items:center;gap:10px;">
           <span style="font-size:12px;color:var(--txt2);min-width:150px">Payout (gain factor)</span>
           <input type="range" id="o-gain" min="1" max="50" step="1" value="2" oninput="renderOpt()" style="flex:1">
@@ -250,7 +249,7 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
           <span style="font-size:12px;color:var(--txt2);min-width:150px">Multiplicateur mise</span>
-          <input type="range" id="o-factor" min="1" max="10" step="0.1" value="2" oninput="renderOpt()" style="flex:1">
+          <input type="range" id="o-factor" min="1" max="30" step="0.1" value="2" oninput="renderOpt()" style="flex:1">
           <span style="font-size:13px;font-weight:600;min-width:36px;text-align:right" id="o-factor-v">2.0</span>
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
@@ -270,18 +269,24 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
           <span style="font-size:13px;font-weight:600;min-width:36px;text-align:right" id="o-minbet-v">0.20</span>
         </div>
 
-        <!-- NEW: Numéros joués par tour -->
-        <div style="display:flex;align-items:center;gap:10px;border-top:1px solid var(--border);padding-top:10px;margin-top:2px;">
-          <span style="font-size:12px;color:var(--txt2);min-width:150px">Numéros / tour</span>
-          <input type="range" id="o-nums" min="1" max="18" step="1" value="1" oninput="renderOpt()" style="flex:1">
-          <span style="font-size:13px;font-weight:600;min-width:36px;text-align:right" id="o-nums-v">1</span>
+        <!-- Picked / Total row — driven by mode -->
+        <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px;display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:12px;color:var(--txt2);min-width:150px" id="o-picked-label">Numéros joués / tour</span>
+            <input type="range" id="o-picked" min="1" max="18" step="1" value="1" oninput="renderOpt()" style="flex:1">
+            <span style="font-size:13px;font-weight:600;min-width:36px;text-align:right" id="o-picked-v">1</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:12px;color:var(--txt2);min-width:150px" id="o-total-label">Total dispo</span>
+            <input type="range" id="o-total" min="2" max="100" step="1" value="37" oninput="renderOpt()" style="flex:1">
+            <span style="font-size:13px;font-weight:600;min-width:36px;text-align:right" id="o-total-v">37</span>
+          </div>
         </div>
-        <!-- stake info -->
         <div id="o-stake-info" style="font-size:11px;color:var(--txt3);text-align:center;margin-top:-4px;"></div>
       </div>
 
       <!-- Stats row -->
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;" id="o-stats">
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
         <div style="background:var(--bg2);border-radius:10px;padding:10px 12px;">
           <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Meilleur gain net</div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:#1db954" id="o-best">—</div>
@@ -295,7 +300,7 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
           <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--gold)" id="o-break">—</div>
         </div>
         <div style="background:var(--bg2);border-radius:10px;padding:10px 12px;">
-          <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Coût total (100t)</div>
+          <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Coût total</div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--txt)" id="o-cost">—</div>
         </div>
       </div>
@@ -311,7 +316,7 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
       <!-- Chart 2: Cumulative cost -->
       <div style="background:var(--bg2);border-radius:12px;padding:12px 12px 14px;display:flex;flex-direction:column;gap:8px;">
         <div style="display:flex;align-items:center;justify-content:space-between;">
-          <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em">Mise engagée cumulée (toutes pertes)</div>
+          <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em">Mise engagée cumulée</div>
           <div style="display:flex;align-items:center;gap:6px">
             <label style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.07em">Capital max</label>
             <input id="o-maxcap" type="number" min="0" step="any" placeholder="—"
@@ -328,16 +333,20 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
       <!-- MONTE CARLO -->
       <div style="background:var(--bg2);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;border-top:2px solid var(--border);">
         <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em;">Simulation Monte Carlo</div>
-
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="font-size:12px;color:var(--txt2);min-width:150px">Numéros joués</span>
-          <input type="range" id="mc-picked" min="1" max="18" step="1" value="1" oninput="updateMC()" style="flex:1">
-          <span style="font-size:13px;font-weight:600;min-width:36px;text-align:right" id="mc-picked-v">1</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="font-size:12px;color:var(--txt2);min-width:150px">Numéros dispo</span>
-          <input type="range" id="mc-total" min="2" max="100" step="1" value="37" oninput="updateMC()" style="flex:1">
-          <span style="font-size:13px;font-weight:600;min-width:36px;text-align:right" id="mc-total-v">37</span>
+        <!-- MC picks/total driven by mode — read-only display, synced from main sliders -->
+        <div style="display:flex;gap:8px;">
+          <div style="flex:1;background:var(--bg3);border-radius:8px;padding:8px 10px;text-align:center;">
+            <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px">Joués</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold)" id="mc-picked-disp">1</div>
+          </div>
+          <div style="flex:1;background:var(--bg3);border-radius:8px;padding:8px 10px;text-align:center;">
+            <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px">Total</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--txt2)" id="mc-total-disp">37</div>
+          </div>
+          <div style="flex:1;background:var(--bg3);border-radius:8px;padding:8px 10px;text-align:center;">
+            <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px">P(gagner)</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#1db954" id="mc-pwin-disp">—</div>
+          </div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
           <span style="font-size:12px;color:var(--txt2);min-width:150px">Simulations</span>
@@ -349,18 +358,12 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
           <input type="range" id="mc-rounds" min="10" max="500" step="10" value="100" oninput="updateMC()" style="flex:1">
           <span style="font-size:13px;font-weight:600;min-width:36px;text-align:right" id="mc-rounds-v">100</span>
         </div>
-
-        <!-- stats row -->
+        <!-- MC stats row -->
         <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
-          <div style="background:var(--bg3);border-radius:10px;padding:10px 8px;text-align:center;">
-            <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">P(gagner)</div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:#1db954" id="mc-pwin">—</div>
-          </div>
           <div style="background:var(--bg3);border-radius:10px;padding:10px 8px;text-align:center;">
             <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Gain moy.</div>
             <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--txt)" id="mc-avgnet">—</div>
           </div>
-          <!-- NEW MC stats -->
           <div style="background:var(--bg3);border-radius:10px;padding:10px 8px;text-align:center;">
             <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Coût moy/round</div>
             <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--txt2)" id="mc-avgcost">—</div>
@@ -369,8 +372,11 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
             <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">P(ruine)</div>
             <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--red)" id="mc-pruin">—</div>
           </div>
+          <div style="background:var(--bg3);border-radius:10px;padding:10px 8px;text-align:center;">
+            <div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">% sims positifs</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:#1db954" id="mc-pwin">—</div>
+          </div>
         </div>
-
         <!-- curves -->
         <div style="background:var(--bg3);border-radius:10px;padding:10px;min-height:220px;">
           <div style="position:relative;height:220px;width:100%;">
@@ -417,11 +423,10 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
         <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px">Paramètres à optimiser</div>
         <div id="cma-param-rows" style="display:flex;flex-direction:column;gap:6px;"></div>
       </div>
-      <div style="background:var(--bg3);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;">
-        <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px">Fonction objectif</div>
+      <div style="background:var(--bg3);border-radius:10px;padding:12px 14px;">
+        <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">Fonction objectif</div>
         <div style="font-size:12px;color:var(--txt2);line-height:1.6;">
-          1. Pire gain net > 0 (gain × bet − coût séquence × numéros)<br>
-          2. Taux de survie maximal (rounds sans ruine / N)
+          1. Pire gain net > 0<br>2. Taux de survie maximal (rounds sans ruine / N)
         </div>
       </div>
       <button id="cma-run-btn" onclick="runOptimizer()" style="width:100%;padding:16px;font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:0.1em;border-radius:12px;border:none;background:var(--gold);color:#0f0f0f;cursor:pointer;">▶ Lancer</button>
@@ -445,52 +450,107 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
 </div>
 
 <script>
-
 const RED_NUMS = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
 
-// ── DATA MODEL ──
-// Each turn is now an array of numbers: e.g. [7], [3,14,22], [0]
-const turns = [];   // Array<number[]>
-const HOT_BUF_SIZE = 500;
-const hotBuffer = []; // flat: individual numbers
+// ── GAME MODE ──
+// 'numeros' | 'douzaines' | 'couleurs'
+let gameMode = 'numeros';
 
-let selectedNums = new Set(); // current round selection
+// Mode config: { picked, total, pWin, pickedLabel, totalLabel, pickedMax }
+function getModeConfig(){
+  switch(gameMode){
+    case 'douzaines':
+      return { picked: parseInt(document.getElementById('o-picked').value)||1, total: 3,
+               pickedLabel: 'Douzaines jouées / tour', totalLabel: 'Total douzaines',
+               pickedMax: 3, totalFixed: 3,
+               pWinFn: (p,t) => Math.min(p,3)/3,
+               desc: 'Probabilité : 12/37 par douzaine (≈ 32.4%). Total : 3 douzaines.' };
+    case 'couleurs':
+      return { picked: 1, total: 2,
+               pickedLabel: 'Couleurs jouées / tour', totalLabel: 'Total couleurs',
+               pickedMax: 1, totalFixed: 2,
+               pWinFn: (p,t) => 18/37,
+               desc: 'Probabilité : 18/37 (≈ 48.6%). Le zéro vert perd sur rouge/noir.' };
+    default: // numeros
+      return { picked: parseInt(document.getElementById('o-picked').value)||1,
+               total: parseInt(document.getElementById('o-total').value)||37,
+               pickedLabel: 'Numéros joués / tour', totalLabel: 'Total numéros dispo',
+               pickedMax: 18, totalFixed: null,
+               pWinFn: (p,t) => Math.min(p, t-1) / t,
+               desc: 'Roulette européenne : 0–36 (37 numéros).' };
+  }
+}
+
+function setMode(mode){
+  gameMode = mode;
+  // update mode buttons
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  // update slider constraints
+  const cfg = getModeConfig();
+  const pickedSlider = document.getElementById('o-picked');
+  const totalSlider  = document.getElementById('o-total');
+  pickedSlider.max = cfg.pickedMax;
+  if(parseInt(pickedSlider.value) > cfg.pickedMax) pickedSlider.value = cfg.pickedMax;
+  document.getElementById('o-picked-label').textContent = cfg.pickedLabel;
+  document.getElementById('o-total-label').textContent  = cfg.totalLabel;
+  if(cfg.totalFixed !== null){
+    totalSlider.value = cfg.totalFixed;
+    totalSlider.disabled = true; totalSlider.style.opacity = '0.4';
+  } else {
+    totalSlider.disabled = false; totalSlider.style.opacity = '';
+    totalSlider.min = 2; totalSlider.max = 100;
+    if(!totalSlider.value || totalSlider.value < 2) totalSlider.value = 37;
+  }
+  if(mode === 'couleurs'){
+    pickedSlider.value = 1; pickedSlider.disabled = true; pickedSlider.style.opacity = '0.4';
+  } else {
+    pickedSlider.disabled = false; pickedSlider.style.opacity = '';
+  }
+  document.getElementById('mode-desc').textContent = cfg.desc;
+  // update hot label
+  const labels = { numeros:'Numéros', douzaines:'Douzaines', couleurs:'Couleurs' };
+  document.getElementById('hot-mode-label').textContent = labels[mode];
+  saveOptState();
+  renderOpt();
+  updateHotNums();
+}
+
+// ── DATA MODEL ──
+const turns = [];
+const HOT_BUF_SIZE = 500;
+const hotBuffer = [];
+let selectedNums = new Set();
 let roundCounter = 1;
 let initMode = false;
 
 // ── HELPERS ──
 function colorClass(n){ if(n===0)return 'grn'; return RED_NUMS.has(n)?'red':'blk'; }
 function colorLabel(n){ if(n===0)return 'Zéro'; return RED_NUMS.has(n)?'Rouge':'Noir'; }
-
 function getCycleSize(){ const el=document.getElementById('o-freq'); const v=el?parseInt(el.value):4; return (v>0&&!isNaN(v))?v:4; }
 function getMinBet(){ const el=document.getElementById('o-minbet'); const v=el?parseFloat(el.value):0.2; return (v>0&&!isNaN(v))?v:0.2; }
-function getNumsPerRound(){ const el=document.getElementById('o-nums'); const v=el?parseInt(el.value):1; return (v>=1&&!isNaN(v))?v:1; }
 function ceilToStep(val,step){ return Math.ceil(val/step)*step; }
+function getPickedCount(){ return parseInt(document.getElementById('o-picked').value)||1; }
+function getTotalCount(){ return parseInt(document.getElementById('o-total').value)||37; }
+function getpWin(){ const cfg=getModeConfig(); return cfg.pWinFn(getPickedCount(), getTotalCount()); }
 
 function getBetAt(r){
-  const freq   = parseInt(document.getElementById('o-freq').value||4);
-  const factor = parseFloat(document.getElementById('o-factor').value||2);
-  const init   = parseFloat(document.getElementById('o-init').value||1);
-  const minBet = getMinBet();
-  const step   = Math.floor((r-1)/freq);
-  return ceilToStep(init*Math.pow(factor,step), minBet);
+  const freq=parseInt(document.getElementById('o-freq').value||4);
+  const factor=parseFloat(document.getElementById('o-factor').value||2);
+  const init=parseFloat(document.getElementById('o-init').value||1);
+  const minBet=getMinBet();
+  return ceilToStep(init*Math.pow(factor,Math.floor((r-1)/freq)),minBet);
 }
-
-function getTotalStakeAt(r){
-  return getBetAt(r) * getNumsPerRound();
-}
-
+function getTotalStakeAt(r){ return getBetAt(r)*getPickedCount(); }
 function isMilestone(n){ const cs=getCycleSize(); return n>1&&(n-1)%cs===0; }
 function nextMilestone(n){ const cs=getCycleSize(); return Math.floor((n-1)/cs)*cs+cs+1; }
-
 function updateRoundDisplay(){
   const el=document.getElementById('round-number');
   el.textContent=roundCounter;
   el.classList.toggle('milestone',isMilestone(roundCounter));
   document.getElementById('round-next').textContent='Prochain jalon : '+nextMilestone(roundCounter);
   const bet=getBetAt(roundCounter);
-  const nums=getNumsPerRound();
-  const totalStake=(bet*nums);
+  const p=getPickedCount();
+  const totalStake=bet*p;
   document.getElementById('round-cycle').textContent=bet%1===0?bet.toFixed(0):bet.toFixed(2);
   document.getElementById('round-total-stake').textContent=totalStake%1===0?totalStake.toFixed(0):totalStake.toFixed(2);
 }
@@ -520,9 +580,7 @@ function buildGrid(){
 // ── SELECTION ──
 function selectNum(n, fromMic){
   if(initMode){
-    // init mode: instantly push single numbers, no multi-select needed
-    turns.push([n]);
-    hotBuffer.push(n);
+    turns.push([n]); hotBuffer.push(n);
     if(hotBuffer.length>HOT_BUF_SIZE) hotBuffer.shift();
     updateHistory(); updateHotNums();
     setOkBtnRemoveMode(true);
@@ -530,7 +588,6 @@ function selectNum(n, fromMic){
     if(btn){ btn.classList.add('selected'); setTimeout(()=>btn.classList.remove('selected'),300); }
     return;
   }
-  // toggle selection
   if(selectedNums.has(n)){
     selectedNums.delete(n);
     const btn=document.getElementById('btn-'+n);
@@ -548,10 +605,8 @@ function updateSelDisplay(){
   const okBtn=document.getElementById('ok-btn');
   if(selectedNums.size===0){
     el.innerHTML='<span style="color:var(--txt3);font-size:14px">Aucun numéro sélectionné</span>';
-    okBtn.disabled=true;
-    return;
+    okBtn.disabled=true; return;
   }
-  // build chips for each selected number
   const chips=[...selectedNums].sort((a,b)=>a-b).map(n=>{
     const bg=n===0?'var(--grn)':RED_NUMS.has(n)?'var(--red)':'#2a2a2a';
     return `<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;background:${bg};font-family:'Bebas Neue',sans-serif;font-size:15px;color:#fff;">${n}</span>`;
@@ -561,56 +616,32 @@ function updateSelDisplay(){
 }
 
 function clearSelection(){
-  selectedNums.forEach(n=>{
-    const btn=document.getElementById('btn-'+n);
-    if(btn) btn.classList.remove('selected');
-  });
-  selectedNums.clear();
-  updateSelDisplay();
+  selectedNums.forEach(n=>{ const btn=document.getElementById('btn-'+n); if(btn) btn.classList.remove('selected'); });
+  selectedNums.clear(); updateSelDisplay();
 }
 
-// ── OK BUTTON MODES ──
+// ── OK BUTTON ──
 function setOkBtnNormal(){
   const okBtn=document.getElementById('ok-btn');
-  okBtn.textContent='✓ Confirmer le tour';
-  okBtn.style.background='';
-  okBtn.style.color='';
-  okBtn.onclick=submitTurn;
-  okBtn.disabled=selectedNums.size===0;
+  okBtn.textContent='✓ Confirmer le tour'; okBtn.style.background=''; okBtn.style.color='';
+  okBtn.onclick=submitTurn; okBtn.disabled=selectedNums.size===0;
 }
 function setOkBtnRemoveMode(on){
   const okBtn=document.getElementById('ok-btn');
-  if(on){
-    okBtn.disabled=false;
-    okBtn.textContent='✕ Supprimer dernier';
-    okBtn.style.background='#3a1515';
-    okBtn.style.color='#e05050';
-    okBtn.onclick=initDelete;
-  } else {
-    setOkBtnNormal();
-  }
+  if(on){ okBtn.disabled=false; okBtn.textContent='✕ Supprimer dernier'; okBtn.style.background='#3a1515'; okBtn.style.color='#e05050'; okBtn.onclick=initDelete; }
+  else setOkBtnNormal();
 }
 
 // ── INIT MODE ──
 function toggleInitMode(){
   initMode=!initMode;
   const btn=document.getElementById('init-mode-btn');
-  if(initMode){
-    btn.style.background='#1a3a1a'; btn.style.color='#1db954'; btn.style.borderColor='#1db954';
-    btn.textContent='✓ Fin Init';
-    setOkBtnRemoveMode(turns.length>0);
-  } else {
-    btn.style.background='var(--bg3)'; btn.style.color='var(--txt2)'; btn.style.borderColor='var(--border)';
-    btn.textContent='⚡ Init';
-    clearSelection();
-    setOkBtnNormal();
-  }
+  if(initMode){ btn.style.background='#1a3a1a'; btn.style.color='#1db954'; btn.style.borderColor='#1db954'; btn.textContent='✓ Fin Init'; setOkBtnRemoveMode(turns.length>0); }
+  else { btn.style.background='var(--bg3)'; btn.style.color='var(--txt2)'; btn.style.borderColor='var(--border)'; btn.textContent='⚡ Init'; clearSelection(); setOkBtnNormal(); }
 }
-
 function initDelete(){
   if(!turns.length) return;
   const last=turns.pop();
-  // remove those numbers from hotBuffer (last N entries)
   last.forEach(()=>{ if(hotBuffer.length) hotBuffer.pop(); });
   updateHistory(); updateHotNums(); saveState();
   setOkBtnRemoveMode(turns.length>0);
@@ -621,13 +652,9 @@ function submitTurn(){
   if(selectedNums.size===0) return;
   const nums=[...selectedNums].sort((a,b)=>a-b);
   turns.push(nums);
-  nums.forEach(n=>{
-    hotBuffer.push(n);
-    if(hotBuffer.length>HOT_BUF_SIZE) hotBuffer.shift();
-  });
+  nums.forEach(n=>{ hotBuffer.push(n); if(hotBuffer.length>HOT_BUF_SIZE) hotBuffer.shift(); });
   if(!initMode) roundCounter++;
-  clearSelection();
-  updateHistory(); updateRoundDisplay(); updateHotNums(); saveState();
+  clearSelection(); updateHistory(); updateRoundDisplay(); updateHotNums(); saveState();
 }
 
 // ── HISTORY ──
@@ -635,72 +662,71 @@ function updateHistory(){
   const row=document.getElementById('history-row');
   document.getElementById('history-count').textContent=turns.length;
   if(!turns.length){ row.innerHTML='<span style="color:var(--txt3);font-size:13px">Aucun tour</span>'; return; }
-  // show last 20 rounds
   const recent=[...turns].reverse().slice(0,20);
   row.innerHTML=recent.map(nums=>{
-    if(nums.length===1){
-      return `<div class="hist-chip ${colorClass(nums[0])}">${nums[0]}</div>`;
-    }
+    if(nums.length===1) return `<div class="hist-chip ${colorClass(nums[0])}">${nums[0]}</div>`;
     const chips=nums.map(n=>`<div class="hist-chip ${colorClass(n)}" style="width:24px;height:24px;font-size:12px;">${n}</div>`).join('');
     return `<div class="hist-group">${chips}</div>`;
   }).join('');
 }
 
-// ── HOT NUMS ──
-function pushHot(n){
-  hotBuffer.push(n);
-  if(hotBuffer.length>HOT_BUF_SIZE) hotBuffer.shift();
-}
+// ── HOT NUMS — mode-aware ──
 function updateHotNums(){
   const winEl=document.getElementById('hot-window');
   const win=winEl?Math.max(1,Math.min(HOT_BUF_SIZE,parseInt(winEl.value)||30)):30;
+  // use hotBuffer which stores individual numbers
   const w=hotBuffer.slice(-win);
   document.getElementById('hot-count').textContent=w.length+' / '+win+' tours';
   const el=document.getElementById('hot-nums');
   if(!w.length){ el.innerHTML='<span class="hot-empty">Pas assez de données</span>'; return; }
-  const freq={};
-  w.forEach(x=>freq[x]=(freq[x]||0)+1);
-  const top=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([x])=>Number(x));
-  el.innerHTML=top.map(n=>`<div class="hot-chip ${colorClass(n)}">${n}</div>`).join('');
+
+  if(gameMode==='numeros'){
+    const freq={};
+    w.forEach(x=>freq[x]=(freq[x]||0)+1);
+    const top=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([x])=>Number(x));
+    el.innerHTML=top.map(n=>`<div class="hot-chip ${colorClass(n)}">${n}</div>`).join('');
+
+  } else if(gameMode==='douzaines'){
+    const dz=[0,0,0];
+    w.forEach(n=>{ if(n>=1&&n<=12)dz[0]++; else if(n>=13&&n<=24)dz[1]++; else if(n>=25&&n<=36)dz[2]++; });
+    const labels=['1–12','13–24','25–36'];
+    const classes=['dz1','dz2','dz3'];
+    const total=dz.reduce((a,b)=>a+b,0)||1;
+    // sort by frequency desc
+    const sorted=[0,1,2].sort((a,b)=>dz[b]-dz[a]);
+    el.innerHTML=sorted.map(i=>{
+      const pct=Math.round(dz[i]/total*100);
+      return `<div class="hot-chip ${classes[i]}" style="flex:1;gap:4px;flex-direction:column;height:auto;padding:6px 4px;min-width:60px;max-width:100px;">
+        <span style="font-size:13px;">${labels[i]}</span>
+        <span style="font-size:11px;color:inherit;opacity:0.8">${dz[i]}x · ${pct}%</span>
+      </div>`;
+    }).join('');
+
+  } else if(gameMode==='couleurs'){
+    const counts={rouge:0,noir:0,vert:0};
+    w.forEach(n=>{ if(n===0)counts.vert++; else if(RED_NUMS.has(n))counts.rouge++; else counts.noir++; });
+    const total=w.length||1;
+    const sorted=[
+      {label:'Rouge',key:'rouge',cls:'red'},
+      {label:'Noir',key:'noir',cls:'blk'},
+      {label:'Zéro',key:'vert',cls:'grn'}
+    ].sort((a,b)=>counts[b.key]-counts[a.key]);
+    el.innerHTML=sorted.map(c=>{
+      const pct=Math.round(counts[c.key]/total*100);
+      return `<div class="hot-chip ${c.cls}" style="flex:1;flex-direction:column;height:auto;padding:6px 8px;min-width:70px;max-width:120px;gap:2px;">
+        <span style="font-size:14px;">${c.label}</span>
+        <span style="font-size:11px;opacity:0.85">${counts[c.key]}x · ${pct}%</span>
+      </div>`;
+    }).join('');
+  }
 }
 
 // ── TABS ──
 function switchTab(tab){
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['entry','stats','play','opt'][i]===tab));
-  ['entry','stats','play','opt'].forEach(p=>document.getElementById('panel-'+p).classList.toggle('active',p===tab));
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['entry','stats','opt'][i]===tab));
+  ['entry','stats','opt'].forEach(p=>document.getElementById('panel-'+p).classList.toggle('active',p===tab));
   if(tab==='stats') renderStats();
-  if(tab==='play')  renderPlay();
   if(tab==='opt')   { renderOpt(); updateMC(); }
-}
-
-// ── PLAY TAB ──
-function renderPlay(){
-  const el=document.getElementById('play-content');
-  if(!turns.length){ el.innerHTML='<div class="play-empty">Aucun tour enregistré.<br><br>Allez dans Entry et soumettez des numéros.</div>'; return; }
-  // flatten last 15 rounds into individual numbers
-  const last15rounds=turns.slice(-15);
-  const flat15=last15rounds.flat();
-  const colored15=flat15.filter(n=>n!==0);
-  const reds=colored15.filter(n=>RED_NUMS.has(n)).length;
-  const blks=colored15.length-reds;
-  let colorHTML;
-  if(reds===blks) colorHTML=`<span class="play-no-signal">— PAS DE SIGNAL —</span>`;
-  else if(reds>blks) colorHTML=`<span class="play-color-badge red">🔴 Rouge</span>`;
-  else colorHTML=`<span class="play-color-badge blk">⚫ Noir</span>`;
-  const dz=[0,0,0];
-  flat15.forEach(n=>{ if(n>=1&&n<=12)dz[0]++; else if(n>=13&&n<=24)dz[1]++; else if(n>=25&&n<=36)dz[2]++; });
-  const maxDz=Math.max(...dz);
-  const topDzCount=dz.filter(v=>v===maxDz).length;
-  let dozenHTML;
-  if(maxDz===0||topDzCount>1) dozenHTML=`<span class="play-no-signal">— PAS DE SIGNAL —</span>`;
-  else{ const dzIdx=dz.indexOf(maxDz); dozenHTML=`<span class="play-dozen-badge">${['1 – 12','13 – 24','25 – 36'][dzIdx]}</span>`; }
-  el.innerHTML=`
-    <div class="play-block">
-      <div class="play-block-title">Couleur — ${last15rounds.length} derniers tours (sans 0)</div>${colorHTML}
-    </div>
-    <div class="play-block">
-      <div class="play-block-title">Douzaine — ${last15rounds.length} derniers tours</div>${dozenHTML}
-    </div>`;
 }
 
 // ── STATS TAB ──
@@ -739,12 +765,11 @@ function renderStats(){
     </div>`;
 }
 
-// ── MIC / SPEECH ──
+// ── MIC ──
 const WORD_MAP = {zéro:0,zero:0,un:1,une:1,deux:2,trois:3,quatre:4,cinq:5,six:6,sept:7,huit:8,neuf:9,dix:10,onze:11,douze:12,treize:13,quatorze:14,quinze:15,seize:16,vingt:20,trente:30,quarante:40,cinquante:50,soixante:60,septante:70,huitante:80,octante:80,nonante:90};
 function normalizeSpeech(p){ return p.toLowerCase().replace(/quatre[- ]vingt[- ]dix/g,'nonante').replace(/quatre[- ]vingts?/g,'huitante').replace(/soixante[- ]dix/g,'septante').replace(/[- ]+/g,' ').trim(); }
 function wordsToNum(phrase){ const tokens=normalizeSpeech(phrase).split(' '); let total=0,current=0,valid=false; for(const t of tokens){ if(WORD_MAP[t]===undefined)continue; valid=true; const v=WORD_MAP[t]; if(v>=100){current=current?current*v:v;}else{current+=v;} } return valid?total+current:null; }
 function extractFirstNumber(text){ const dm=text.match(/\b(3[0-6]|[0-2]?[0-9])\b/); if(dm)return parseInt(dm[1]); const wordPat=/(?:(?:zéro|zero|un|une|deux|trois|quatre-vingt(?:-dix)?|quatre-vingts?|soixante-dix|soixante|cinq|six|sept|huit|neuf|dix|onze|douze|treize|quatorze|quinze|seize|vingt|trente)(?:[- ](?:et[- ])?)?)+/gi; const wm=text.match(wordPat); if(wm){for(const m of wm){const n=wordsToNum(m);if(n!==null&&n>=0&&n<=36)return n;}} return null; }
-
 let micRec=null,micListening=false,micStopping=false;
 function initMicRec(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -761,15 +786,15 @@ function initMicRec(){
       const hasOk=!initMode&&/\bok\b/.test(lower);
       const n=extractFirstNumber(final);
       if(n!==null&&n>=0&&n<=36){
-        selectNum(n, true);
+        selectNum(n,true);
         const elT=document.getElementById('mic-transcript');
-        if(elT){elT.style.display='block'; elT.textContent='✓ '+n;}
-        if(hasOk&&selectedNums.size>0){ submitTurn(); if(elT){elT.textContent='✓ '+n+' — Confirmé';} }
+        if(elT){elT.style.display='block';elT.textContent='✓ '+n;}
+        if(hasOk&&selectedNums.size>0){submitTurn();if(elT){elT.textContent='✓ '+n+' — Confirmé';}}
       } else if(hasOk&&selectedNums.size>0){
         submitTurn();
-        const elT=document.getElementById('mic-transcript'); if(elT){elT.style.display='block';elT.textContent='✓ Confirmé';}
+        const elT=document.getElementById('mic-transcript');if(elT){elT.style.display='block';elT.textContent='✓ Confirmé';}
       } else {
-        const elT=document.getElementById('mic-transcript'); if(elT) elT.textContent='Non reconnu : '+final;
+        const elT=document.getElementById('mic-transcript');if(elT)elT.textContent='Non reconnu : '+final;
       }
     }
   };
@@ -792,7 +817,7 @@ function toggleMic(){
 }
 
 // ── INDEXEDDB ──
-const DB_NAME='roulette_app',DB_VER=2,STORE='state';
+const DB_NAME='roulette_app',DB_VER=3,STORE='state';
 let db=null;
 function openDB(cb){ if(db){cb(db);return;} const req=indexedDB.open(DB_NAME,DB_VER); req.onupgradeneeded=e=>{ const idb=e.target.result; if(!idb.objectStoreNames.contains(STORE)) idb.createObjectStore(STORE); }; req.onsuccess=e=>{db=e.target.result;cb(db);}; req.onerror=()=>console.warn('IndexedDB unavailable'); }
 function saveState(){
@@ -812,7 +837,8 @@ function saveOptState(){
     const tx=db.transaction(STORE,'readwrite');
     tx.objectStore(STORE).put({
       gain:g('o-gain'),factor:g('o-factor'),freq:g('o-freq'),init:g('o-init'),
-      minbet:g('o-minbet'),maxcap:g('o-maxcap'),hotwin:g('hot-window'),nums:g('o-nums')
+      minbet:g('o-minbet'),maxcap:g('o-maxcap'),hotwin:g('hot-window'),
+      picked:g('o-picked'),total:g('o-total'),gameMode
     },'opt');
   });
 }
@@ -820,7 +846,7 @@ function saveOptimizerState(){
   openDB(db=>{
     const get=id=>{const el=document.getElementById(id);return el?el.value:null;};
     const state={capital:get('cma-capital'),rounds:get('cma-rounds'),gens:get('cma-gens'),params:{}};
-    ['gain','factor','freq','init','minbet','nums'].forEach(id=>{
+    ['gain','factor','freq','init','minbet','picked'].forEach(id=>{
       const chk=document.getElementById('cma-check-'+id);
       state.params[id]={checked:chk?chk.checked:true,min:get('cma-min-'+id),max:get('cma-max-'+id),step:get('cma-step-'+id),defval:get('cma-defval-'+id)};
     });
@@ -832,15 +858,18 @@ function applyOptimizerState(s){
   if(!s)return;
   const set=(id,val)=>{const el=document.getElementById(id);if(el&&val!=null)el.value=val;};
   set('cma-capital',s.capital); set('cma-rounds',s.rounds); set('cma-gens',s.gens);
-  if(s.params){['gain','factor','freq','init','minbet','nums'].forEach(id=>{const p=s.params[id];if(!p)return;const chk=document.getElementById('cma-check-'+id);if(chk){chk.checked=p.checked;toggleParamRow(id);}set('cma-min-'+id,p.min);set('cma-max-'+id,p.max);set('cma-step-'+id,p.step);set('cma-defval-'+id,p.defval);});}
+  if(s.params){['gain','factor','freq','init','minbet','picked'].forEach(id=>{const p=s.params[id];if(!p)return;const chk=document.getElementById('cma-check-'+id);if(chk){chk.checked=p.checked;toggleParamRow(id);}set('cma-min-'+id,p.min);set('cma-max-'+id,p.max);set('cma-step-'+id,p.step);set('cma-defval-'+id,p.defval);});}
 }
 function loadOptState(cb){ openDB(db=>{const req=db.transaction(STORE).objectStore(STORE).get('opt');req.onsuccess=e=>cb(e.target.result||null);req.onerror=()=>cb(null);}); }
 function applyOptState(s){
   if(!s)return;
   const set=(id,val)=>{const el=document.getElementById(id);if(el&&val!==undefined&&val!=='')el.value=val;};
-  set('o-gain',s.gain);set('o-factor',s.factor);set('o-freq',s.freq);set('o-minbet',s.minbet);set('o-maxcap',s.maxcap);set('o-init',s.init);
+  set('o-gain',s.gain);set('o-factor',s.factor);set('o-freq',s.freq);set('o-minbet',s.minbet);
+  set('o-maxcap',s.maxcap);set('o-init',s.init);
   if(s.hotwin)set('hot-window',s.hotwin);
-  if(s.nums)set('o-nums',s.nums);
+  if(s.picked)set('o-picked',s.picked);
+  if(s.total)set('o-total',s.total);
+  if(s.gameMode && s.gameMode !== gameMode){ gameMode=s.gameMode; setMode(gameMode); }
 }
 function loadState(cb){ openDB(db=>{const req=db.transaction(STORE).objectStore(STORE).get('current');req.onsuccess=e=>cb(e.target.result||null);req.onerror=()=>cb(null);}); }
 function applyState(s){
@@ -879,66 +908,47 @@ function newPlay(){
   }
 }
 
-// ── MONTE CARLO ──
-// Revised: p = nums/total (probability that at least one of picked numbers wins)
-// Payout: gain × bet (per number) for the winning number, cost = bet × nums × rounds_in_sequence
+// ── MONTE CARLO — uses picked/total from mode ──
 let mcChart=null;
 function updateMC(){
-  const nums    = parseInt(document.getElementById('mc-picked').value);
-  const total   = parseInt(document.getElementById('mc-total').value);
+  const picked  = getPickedCount();
+  const total   = getTotalCount();
+  const pWin    = getpWin();
   const sims    = parseInt(document.getElementById('mc-sims').value);
-  const numRounds= parseInt(document.getElementById('mc-rounds').value);
-
-  document.getElementById('mc-picked-v').textContent=nums;
-  document.getElementById('mc-total-v').textContent=total;
+  const numRounds = parseInt(document.getElementById('mc-rounds').value);
   document.getElementById('mc-sims-v').textContent=sims;
   document.getElementById('mc-rounds-v').textContent=numRounds;
 
-  // probability at least one of nums wins per spin (assuming distinct numbers, no overlap)
-  const pWin=Math.min(nums,total-1)/total;
+  // sync display
+  document.getElementById('mc-picked-disp').textContent = picked;
+  document.getElementById('mc-total-disp').textContent  = total;
+  document.getElementById('mc-pwin-disp').textContent   = (pWin*100).toFixed(1)+'%';
 
-  const gain   =parseFloat(document.getElementById('o-gain').value||2);
-  const factor =parseFloat(document.getElementById('o-factor').value||2);
-  const freq   =parseInt(document.getElementById('o-freq').value||4);
-  const init   =parseFloat(document.getElementById('o-init').value||1);
-  const minBet =getMinBet();
-  const maxCapEl=document.getElementById('o-maxcap');
-  const maxCap =(maxCapEl&&maxCapEl.value!=='')?parseFloat(maxCapEl.value):Infinity;
+  const gain   = parseFloat(document.getElementById('o-gain').value||2);
+  const factor = parseFloat(document.getElementById('o-factor').value||2);
+  const freq   = parseInt(document.getElementById('o-freq').value||4);
+  const init   = parseFloat(document.getElementById('o-init').value||1);
+  const minBet = getMinBet();
+  const maxCapEl= document.getElementById('o-maxcap');
+  const maxCap = (maxCapEl&&maxCapEl.value!=='')?parseFloat(maxCapEl.value):Infinity;
 
-  // per-number bet at round r of a sequence
   function betAt(r){ return ceilToStep(init*Math.pow(factor,Math.floor((r-1)/freq)),minBet); }
-  // total stake per round = bet × nums
-  function stakeAt(r){ return betAt(r)*nums; }
+  function stakeAt(r){ return betAt(r)*picked; }
 
-  const trajectories=[];
-  const finalGains=[];
-  let bustedCount=0;
-  let totalCostAcc=0;
+  const trajectories=[],finalGains=[];
+  let bustedCount=0,totalCostAcc=0;
 
   for(let s=0;s<sims;s++){
     const traj=[];
-    let cumGain=0;
-    let seqRound=1;
-    let seqCost=0;
-    let busted=false;
-
+    let cumGain=0,seqRound=1,seqCost=0,busted=false;
     for(let round=0;round<numRounds;round++){
       if(busted){traj.push(parseFloat(cumGain.toFixed(4)));continue;}
       const bet=betAt(seqRound);
-      const stake=bet*nums;
-      if(maxCap<Infinity&&seqCost+stake>maxCap){
-        cumGain-=seqCost; busted=true;
-        traj.push(parseFloat(cumGain.toFixed(4)));
-        continue;
-      }
+      const stake=stakeAt(seqRound);
+      if(maxCap<Infinity&&seqCost+stake>maxCap){ cumGain-=seqCost; busted=true; traj.push(parseFloat(cumGain.toFixed(4))); continue; }
       seqCost+=stake;
-      if(Math.random()<pWin){
-        // win: payout = gain × bet (one number wins), net = gain×bet - seqCost
-        cumGain+=gain*bet-seqCost;
-        seqRound=1; seqCost=0;
-      } else {
-        seqRound++;
-      }
+      if(Math.random()<pWin){ cumGain+=gain*bet-seqCost; seqRound=1; seqCost=0; }
+      else { seqRound++; }
       traj.push(parseFloat(cumGain.toFixed(4)));
     }
     trajectories.push(traj);
@@ -948,58 +958,32 @@ function updateMC(){
   }
 
   const winTraj=finalGains.filter(v=>v>0).length;
-  const pWinPct=(winTraj/sims*100).toFixed(1);
+  document.getElementById('mc-pwin').textContent=(winTraj/sims*100).toFixed(1)+'%';
   const avgNet=(finalGains.reduce((a,b)=>a+b,0)/sims).toFixed(2);
-  const avgCostPerRound=(totalCostAcc/sims/numRounds).toFixed(2);
-  const pRuinPct=(bustedCount/sims*100).toFixed(1);
-
-  document.getElementById('mc-pwin').textContent=pWinPct+'%';
   document.getElementById('mc-avgnet').textContent=avgNet;
   document.getElementById('mc-avgnet').style.color=parseFloat(avgNet)>=0?'#1db954':'var(--red)';
-  document.getElementById('mc-avgcost').textContent=avgCostPerRound;
-  document.getElementById('mc-pruin').textContent=pRuinPct+'%';
+  document.getElementById('mc-avgcost').textContent=(totalCostAcc/sims/numRounds).toFixed(2);
+  document.getElementById('mc-pruin').textContent=(bustedCount/sims*100).toFixed(1)+'%';
 
   const labels=Array.from({length:numRounds},(_,i)=>i+1);
   const meanCurve=labels.map((_,i)=>parseFloat((trajectories.reduce((a,t)=>a+t[i],0)/sims).toFixed(4)));
-
-  function trajBorder(t){ return t[t.length-1]>=0?'rgba(29,185,84,0.55)':'rgba(192,57,43,0.45)'; }
-
-  const datasets=trajectories.map((traj,i)=>({
-    data:traj, borderColor:trajBorder(traj), borderWidth:1, pointRadius:0, fill:false, tension:0.1,
-    label:i===0?'Trajectoire':'', order:2,
-  }));
-  datasets.push({data:Array(numRounds).fill(0),borderColor:'rgba(255,255,255,0.15)',borderWidth:1,borderDash:[3,3],pointRadius:0,fill:false,label:'',order:1});
+  const datasets=trajectories.map((traj,i)=>({data:traj,borderColor:traj[traj.length-1]>=0?'rgba(29,185,84,0.45)':'rgba(192,57,43,0.4)',borderWidth:1,pointRadius:0,fill:false,tension:0.1,label:i===0?'Trajectoire':'',order:2}));
+  datasets.push({data:Array(numRounds).fill(0),borderColor:'rgba(255,255,255,0.12)',borderWidth:1,borderDash:[3,3],pointRadius:0,fill:false,label:'',order:1});
   datasets.push({data:meanCurve,borderColor:'#e8a020',borderWidth:2.5,pointRadius:0,fill:false,tension:0.2,label:'Moyenne',order:0});
 
-  const canvas=document.getElementById('mc-chart');
   if(mcChart){mcChart.destroy();mcChart=null;}
-  mcChart=new Chart(canvas,{
-    type:'line',
-    data:{labels,datasets},
-    options:{
-      responsive:true,maintainAspectRatio:false,animation:{duration:0},
-      plugins:{
-        legend:{display:true,labels:{color:'#a0a0a8',font:{size:10},boxWidth:12,filter:item=>item.text!==''}},
-        tooltip:{mode:'index',intersect:false,callbacks:{title:ctx=>'Round '+ctx[0].label,label:ctx=>ctx.dataset.label?ctx.dataset.label+' : '+ctx.raw:null}}
-      },
-      scales:{
-        x:{ticks:{color:'#606068',font:{size:9},maxTicksLimit:10},grid:{color:'#2a2a2d'}},
-        y:{ticks:{color:'#606068',font:{size:10}},grid:{color:'#2a2a2d'},title:{display:true,text:'Gain cumulé',color:'#606068',font:{size:10}}}
-      }
-    }
-  });
+  mcChart=new Chart(document.getElementById('mc-chart'),{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,animation:{duration:0},plugins:{legend:{display:true,labels:{color:'#a0a0a8',font:{size:10},boxWidth:12,filter:item=>item.text!==''}},tooltip:{mode:'index',intersect:false,callbacks:{title:ctx=>'Round '+ctx[0].label,label:ctx=>ctx.dataset.label?ctx.dataset.label+' : '+ctx.raw:null}}},scales:{x:{ticks:{color:'#606068',font:{size:9},maxTicksLimit:10},grid:{color:'#2a2a2d'}},y:{ticks:{color:'#606068',font:{size:10}},grid:{color:'#2a2a2d'}}}}});
 }
 
 // ── OPTIMIZER ──
 const CMA_PARAMS=[
   {id:'gain',   label:'Payout',             min:1,   max:50, step:0.5,  defVal:2  },
-  {id:'factor', label:'Multiplicateur',     min:1,   max:10, step:0.1,  defVal:2  },
+  {id:'factor', label:'Multiplicateur',     min:1,   max:30, step:0.1,  defVal:2  },
   {id:'freq',   label:'Tours avant hausse', min:1,   max:30, step:1,    defVal:4  },
   {id:'init',   label:'Mise initiale',      min:0.1, max:5,  step:0.1,  defVal:1  },
   {id:'minbet', label:'Mise minimum',       min:0.05,max:2,  step:0.05, defVal:0.2},
-  {id:'nums',   label:'Numéros / tour',     min:1,   max:18, step:1,    defVal:1  },
+  {id:'picked', label:'Choix / tour',       min:1,   max:18, step:1,    defVal:1  },
 ];
-
 let optimizerWorker=null;
 function openOptimizer(){
   const capEl=document.getElementById('o-maxcap'); if(capEl&&capEl.value)document.getElementById('cma-capital').value=capEl.value;
@@ -1018,7 +1002,7 @@ function switchModalTab(tab){
     panel.style.display=active?'flex':'none';
   });
 }
-const OPT_SLIDER_MAP={gain:'o-gain',factor:'o-factor',freq:'o-freq',init:'o-init',minbet:'o-minbet',nums:'o-nums'};
+const OPT_SLIDER_MAP={gain:'o-gain',factor:'o-factor',freq:'o-freq',init:'o-init',minbet:'o-minbet',picked:'o-picked'};
 function getCurrentOptVal(id){ const el=document.getElementById(OPT_SLIDER_MAP[id]); return el?parseFloat(el.value):null; }
 function toggleParamRow(id){
   const checked=document.getElementById('cma-check-'+id).checked;
@@ -1027,10 +1011,15 @@ function toggleParamRow(id){
 }
 function buildParamRows(){
   const container=document.getElementById('cma-param-rows'); container.innerHTML='';
-  CMA_PARAMS.forEach(p=>{
+  const cfg=getModeConfig();
+  // adjust picked max to mode
+  const paramList=CMA_PARAMS.map(p=>{
+    if(p.id==='picked') return {...p, max:cfg.pickedMax, label: cfg.pickedLabel.replace(' / tour','')};
+    return p;
+  });
+  paramList.forEach(p=>{
     const curVal=getCurrentOptVal(p.id)??p.defVal;
-    const row=document.createElement('div');
-    row.style.cssText='display:flex;flex-direction:column;gap:4px;';
+    const row=document.createElement('div'); row.style.cssText='display:flex;flex-direction:column;gap:4px;';
     row.innerHTML=`
       <div style="display:flex;align-items:center;gap:8px;">
         <input type="checkbox" id="cma-check-${p.id}" checked onchange="toggleParamRow('${p.id}')" style="width:16px;height:16px;accent-color:var(--gold);flex-shrink:0;">
@@ -1059,32 +1048,26 @@ function runOptimizer(){
   document.getElementById('cma-gen-label').textContent='';
   document.getElementById('cma-best-score').textContent='Score meilleur : —';
   switchModalTab('results');
-
   const capital=parseFloat(document.getElementById('cma-capital').value)||Infinity;
   const rounds=parseInt(document.getElementById('cma-rounds').value)||100;
   const maxGens=parseInt(document.getElementById('cma-gens').value)||100;
-
+  const pWinFixed=getpWin();
   const activeParams=CMA_PARAMS.filter(p=>document.getElementById('cma-check-'+p.id).checked)
     .map(p=>({id:p.id,label:p.label,step:parseFloat(document.getElementById('cma-step-'+p.id).value)||p.step,min:parseFloat(document.getElementById('cma-min-'+p.id).value),max:parseFloat(document.getElementById('cma-max-'+p.id).value),defVal:getCurrentOptVal(p.id)??p.defVal}));
-
   const fixedParams={};
   CMA_PARAMS.filter(p=>!document.getElementById('cma-check-'+p.id).checked)
     .forEach(p=>{const el=document.getElementById('cma-defval-'+p.id);fixedParams[p.id]=el?parseFloat(el.value):p.defVal;});
 
-  // Worker: evaluates all grid combos
-  // Cost per round = bet × nums; reward = gain × bet (one number wins)
   const workerCode=`
 const ceilToStep=(val,step)=>Math.ceil(val/step)*step;
 const betAt=(r,init,factor,freq,minbet)=>ceilToStep(init*Math.pow(factor,Math.floor((r-1)/freq)),minbet);
-
-function evaluate(params,capital,rounds){
-  const {gain,factor,freq,init,minbet,nums}=params;
+function evaluate(params,capital,rounds,pWin){
+  const {gain,factor,freq,init,minbet,picked}=params;
   let cumCost=0,worstNet=Infinity,survivalRounds=0;
   for(let r=1;r<=rounds;r++){
     const bet=betAt(r,init,factor,freq,minbet);
-    const stake=bet*nums;
+    const stake=bet*picked;
     cumCost+=stake;
-    // net gain if winning at this round: payout - total cost of sequence
     const netIfWin=gain*bet-cumCost;
     if(netIfWin<worstNet) worstNet=netIfWin;
     if(capital<Infinity&&cumCost>capital) break;
@@ -1093,33 +1076,23 @@ function evaluate(params,capital,rounds){
   if(worstNet<=0) return -1;
   return survivalRounds/rounds;
 }
-
 self.onmessage=function(e){
-  const {activeParams,fixedParams,capital,rounds,maxGens}=e.data;
-  const axes=activeParams.map(p=>{
-    const steps=Math.round((p.max-p.min)/p.step);
-    return Array.from({length:steps+1},(_,i)=>+(p.min+i*p.step).toFixed(6));
-  });
-  function* cartesian(arrays,idx,current){
-    if(idx===arrays.length){yield[...current];return;}
-    for(const v of arrays[idx]){current[idx]=v;yield* cartesian(arrays,idx+1,current);}
-  }
+  const {activeParams,fixedParams,capital,rounds,maxGens,pWin}=e.data;
+  const axes=activeParams.map(p=>{const steps=Math.round((p.max-p.min)/p.step);return Array.from({length:steps+1},(_,i)=>+(p.min+i*p.step).toFixed(6));});
+  function* cartesian(arrays,idx,current){if(idx===arrays.length){yield[...current];return;}for(const v of arrays[idx]){current[idx]=v;yield* cartesian(arrays,idx+1,current);}}
   let bestScore=-Infinity,bestParams=null,evaluated=0;
   const total=axes.reduce((a,ax)=>a*ax.length,1);
   const reportEvery=Math.max(1,Math.floor(total/100));
   for(const combo of cartesian(axes,0,new Array(activeParams.length))){
     const params={...fixedParams};
-    // ensure nums is integer
-    activeParams.forEach((p,i)=>params[p.id]=p.id==='nums'||p.id==='freq'?Math.round(combo[i]):combo[i]);
-    const score=evaluate(params,capital,rounds);
+    activeParams.forEach((p,i)=>params[p.id]=p.id==='picked'||p.id==='freq'?Math.round(combo[i]):combo[i]);
+    const score=evaluate(params,capital,rounds,pWin);
     evaluated++;
     if(score>bestScore){bestScore=score;bestParams={...params};}
     if(evaluated%reportEvery===0||evaluated===total){
       const gen=Math.round(evaluated/total*100);
       if(bestScore>0&&bestParams){
-        const topParams={};
-        activeParams.forEach(p=>topParams[p.id]=p.id==='nums'||p.id==='freq'?Math.round(bestParams[p.id]):+bestParams[p.id].toFixed(3));
-        Object.assign(topParams,fixedParams);
+        const topParams={};activeParams.forEach(p=>topParams[p.id]=p.id==='picked'||p.id==='freq'?Math.round(bestParams[p.id]):(+bestParams[p.id]).toFixed(3));Object.assign(topParams,fixedParams);
         self.postMessage({type:'progress',gen,maxGens,bestScore:+bestScore.toFixed(4),topParams,topScore:+bestScore.toFixed(4),feasible:true});
       } else {
         self.postMessage({type:'progress',gen,maxGens,bestScore:-1,topParams:null,topScore:null,feasible:false});
@@ -1128,15 +1101,13 @@ self.onmessage=function(e){
   }
   self.postMessage({type:'done',results:[]});
 };`;
-
   const blob=new Blob([workerCode],{type:'application/javascript'});
   optimizerWorker=new Worker(URL.createObjectURL(blob));
-  optimizerWorker.postMessage({activeParams,fixedParams,capital,rounds,maxGens});
+  optimizerWorker.postMessage({activeParams,fixedParams,capital,rounds,maxGens,pWin:pWinFixed});
   optimizerWorker.onmessage=e=>{
     const d=e.data;
     if(d.type==='progress'){
-      const pct=(d.gen/d.maxGens*100).toFixed(0);
-      document.getElementById('cma-progress-bar').style.width=pct+'%';
+      document.getElementById('cma-progress-bar').style.width=(d.gen/d.maxGens*100).toFixed(0)+'%';
       document.getElementById('cma-status').textContent='Optimisation en cours…';
       document.getElementById('cma-gen-label').textContent='Gén. '+d.gen+' / '+d.maxGens;
       document.getElementById('cma-best-score').textContent='Score meilleur : '+d.bestScore;
@@ -1159,17 +1130,8 @@ function addResultCard(gen,score,params,activeParams,fixedParams){
   card.style.cssText='background:var(--bg3);border-radius:10px;padding:10px 12px;cursor:pointer;border:1.5px solid transparent;transition:border-color 0.15s;';
   card.onmouseenter=()=>card.style.borderColor='var(--gold)';
   card.onmouseleave=()=>card.style.borderColor='transparent';
-  const paramsHTML=activeParams.map(p=>{
-    const v=p.id==='nums'||p.id==='freq'?Math.round(params[p.id]):(+params[p.id]).toFixed(2);
-    return `<span style="background:var(--bg2);border-radius:5px;padding:2px 7px;font-size:12px;color:var(--txt)">${p.label}: <b>${v}</b></span>`;
-  }).join('');
-  card.innerHTML=`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-      <span style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.07em">Gén. ${gen}</span>
-      <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold)">Score ${score}</span>
-    </div>
-    <div style="display:flex;flex-wrap:wrap;gap:5px;">${paramsHTML}</div>
-    <div style="margin-top:8px;font-size:11px;color:var(--txt3);text-align:center;">Tap pour appliquer</div>`;
+  const paramsHTML=activeParams.map(p=>{const v=p.id==='picked'||p.id==='freq'?Math.round(params[p.id]):(+params[p.id]).toFixed(2);return `<span style="background:var(--bg2);border-radius:5px;padding:2px 7px;font-size:12px;color:var(--txt)">${p.label}: <b>${v}</b></span>`;}).join('');
+  card.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.07em">Gén. ${gen}</span><span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold)">Score ${score}</span></div><div style="display:flex;flex-wrap:wrap;gap:5px;">${paramsHTML}</div><div style="margin-top:8px;font-size:11px;color:var(--txt3);text-align:center;">Tap pour appliquer</div>`;
   card.onclick=()=>applyOptimizerResult(params,activeParams,fixedParams);
   list.insertBefore(card,list.firstChild);
 }
@@ -1177,40 +1139,32 @@ function addResultCard(gen,score,params,activeParams,fixedParams){
 function applyOptimizerResult(params,activeParams,fixedParams){
   if(!params||!activeParams) return;
   fixedParams=fixedParams||{};
-  const map={gain:'o-gain',factor:'o-factor',freq:'o-freq',init:'o-init',minbet:'o-minbet',nums:'o-nums'};
-  const cmaRounds=document.getElementById('cma-rounds');
-  const oRounds=document.getElementById('o-rounds');
+  const map={gain:'o-gain',factor:'o-factor',freq:'o-freq',init:'o-init',minbet:'o-minbet',picked:'o-picked'};
+  const cmaRounds=document.getElementById('cma-rounds'); const oRounds=document.getElementById('o-rounds');
   if(cmaRounds&&oRounds) oRounds.value=cmaRounds.value;
-  const cmaCapital=document.getElementById('cma-capital');
-  const oMaxcap=document.getElementById('o-maxcap');
+  const cmaCapital=document.getElementById('cma-capital'); const oMaxcap=document.getElementById('o-maxcap');
   if(cmaCapital&&oMaxcap) oMaxcap.value=cmaCapital.value;
-  activeParams.forEach(p=>{
-    const el=document.getElementById(map[p.id]);
-    if(el){ el.value=p.id==='nums'||p.id==='freq'?Math.round(params[p.id]):(+params[p.id]).toFixed(2); }
-  });
-  Object.entries(fixedParams).forEach(([id,val])=>{
-    const el=document.getElementById(map[id]);
-    if(el){ el.value=id==='nums'||id==='freq'?Math.round(val):(+val).toFixed(2); }
-  });
+  activeParams.forEach(p=>{ const el=document.getElementById(map[p.id]); if(el){ el.value=p.id==='picked'||p.id==='freq'?Math.round(params[p.id]):(+params[p.id]).toFixed(2); }});
+  Object.entries(fixedParams).forEach(([id,val])=>{ const el=document.getElementById(map[id]); if(el){ el.value=id==='picked'||id==='freq'?Math.round(val):(+val).toFixed(2); }});
   renderOpt(); closeOptimizer();
 }
 
 // ── OPT TAB ──
 let optChart=null,costChart=null;
-
 function renderOpt(){
   const gain   =parseFloat(document.getElementById('o-gain').value);
   const factor =parseFloat(document.getElementById('o-factor').value);
   const freq   =parseInt(document.getElementById('o-freq').value);
   const minBet =getMinBet();
-  const nums   =getNumsPerRound();
-
+  const picked =getPickedCount();
+  const total  =getTotalCount();
   updateRoundDisplay();
   document.getElementById('o-gain-v').textContent=gain+'×';
   document.getElementById('o-factor-v').textContent=factor.toFixed(1);
   document.getElementById('o-freq-v').textContent=freq;
   document.getElementById('o-minbet-v').textContent=minBet.toFixed(2);
-  document.getElementById('o-nums-v').textContent=nums;
+  document.getElementById('o-picked-v').textContent=picked;
+  document.getElementById('o-total-v').textContent=total;
 
   const initSlider=document.getElementById('o-init');
   initSlider.min=minBet; initSlider.step=minBet;
@@ -1218,93 +1172,49 @@ function renderOpt(){
   document.getElementById('o-init-v').textContent=parseFloat(initSlider.value).toFixed(2);
   const init=parseFloat(initSlider.value);
 
-  // stake info line
+  const pWin=getpWin();
+  const cfg=getModeConfig();
   const bet1=ceilToStep(init,minBet);
   document.getElementById('o-stake-info').textContent=
-    `Mise par numéro : ${bet1.toFixed(2)}  ×  ${nums} numéro${nums>1?'s':''}  =  ${(bet1*nums).toFixed(2)} total/tour`;
+    `P(gagner) : ${(pWin*100).toFixed(1)}%  ·  Mise : ${bet1.toFixed(2)} × ${picked} = ${(bet1*picked).toFixed(2)}/tour`;
 
   function betAt(r){ return ceilToStep(init*Math.pow(factor,Math.floor((r-1)/freq)),minBet); }
-  function stakeAt(r){ return betAt(r)*nums; }
+  function stakeAt(r){ return betAt(r)*picked; }
 
   const N=parseInt(document.getElementById('o-rounds').value)||100;
   document.getElementById('o-rounds-v').textContent=N;
 
   const labels=[],netGains=[];
   let cumLost=0,bestGain=-Infinity,worstGain=Infinity,breakEven=null;
-
   for(let r=1;r<=N;r++){
     const bet=betAt(r);
-    const stake=stakeAt(r);
-    // net = payout (gain × bet, one number) - cumulative cost (stake × rounds so far)
-    const net=gain*bet-(cumLost+stake);
-    labels.push(r);
-    netGains.push(parseFloat(net.toFixed(4)));
+    const net=gain*bet-(cumLost+stakeAt(r));
+    labels.push(r); netGains.push(parseFloat(net.toFixed(4)));
     if(net>bestGain) bestGain=net;
     if(net<worstGain) worstGain=net;
     if(breakEven===null&&net>=0) breakEven=r;
-    cumLost+=stake;
+    cumLost+=stakeAt(r);
   }
-
   document.getElementById('o-best').textContent=bestGain===-Infinity?'—':bestGain.toFixed(2);
   document.getElementById('o-worst').textContent=worstGain===Infinity?'—':worstGain.toFixed(2);
   document.getElementById('o-break').textContent=breakEven!==null?'Tour '+breakEven:'Jamais';
   document.getElementById('o-cost').textContent=cumLost.toFixed(2);
 
   const ptColors=netGains.map(v=>v>=0?'#1db954':'#c0392b');
-
-  const canvas=document.getElementById('o-chart');
   if(optChart){optChart.destroy();optChart=null;}
-  optChart=new Chart(canvas,{
-    type:'bar',
-    data:{labels,datasets:[{label:'Gain net',data:netGains,backgroundColor:ptColors,borderRadius:2,borderSkipped:false}]},
-    options:{
-      responsive:true,maintainAspectRatio:false,animation:{duration:200},
-      plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>'Tour '+ctx[0].label,label:ctx=>'Net : '+ctx.raw.toFixed(3)}}},
-      scales:{
-        x:{ticks:{color:'#606068',font:{size:10},maxTicksLimit:10},grid:{color:'#2a2a2d'}},
-        y:{ticks:{color:'#606068',font:{size:10}},grid:{color:'#2a2a2d'},border:{dash:[3,3]}}
-      }
-    }
-  });
+  optChart=new Chart(document.getElementById('o-chart'),{type:'bar',data:{labels,datasets:[{label:'Gain net',data:netGains,backgroundColor:ptColors,borderRadius:2,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:200},plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>'Tour '+ctx[0].label,label:ctx=>'Net : '+ctx.raw.toFixed(3)}}},scales:{x:{ticks:{color:'#606068',font:{size:10},maxTicksLimit:10},grid:{color:'#2a2a2d'}},y:{ticks:{color:'#606068',font:{size:10}},grid:{color:'#2a2a2d'},border:{dash:[3,3]}}}}});
 
-  // cumulative cost chart (cost = sum of stake per round = bet×nums per round)
-  const cumCosts=[];
-  let running=0;
+  const cumCosts=[]; let running=0;
   for(let r=1;r<=N;r++){ running+=stakeAt(r); cumCosts.push(parseFloat(running.toFixed(4))); }
-
   const maxCapEl=document.getElementById('o-maxcap');
   const maxCap=maxCapEl&&maxCapEl.value!==''?parseFloat(maxCapEl.value):null;
-
   let ruinRound=null;
   if(maxCap!==null&&maxCap>0){ for(let i=0;i<cumCosts.length;i++){ if(cumCosts[i]>maxCap){ruinRound=i+1;break;} } }
-
-  const datasets=[{
-    label:'Mise cumulée',data:cumCosts,borderColor:'#e8a020',backgroundColor:'rgba(232,160,32,0.08)',
-    borderWidth:2,pointRadius:0,fill:true,tension:0.1,order:1
-  }];
-  if(maxCap!==null&&maxCap>0){
-    datasets.push({label:'Capital max',data:Array(N).fill(maxCap),borderColor:'#c0392b',borderWidth:2,borderDash:[6,4],pointRadius:0,fill:false,order:0});
-  }
-  if(ruinRound!==null){
-    const ruinSpike=Array(N).fill(null);
-    ruinSpike[ruinRound-1]=cumCosts[ruinRound-1];
-    datasets.push({label:'Ruine',data:ruinSpike,borderColor:'#c0392b',backgroundColor:'#c0392b',pointRadius:ctx=>ctx.dataIndex===ruinRound-1?7:0,pointStyle:'crossRot',showLine:false,order:-1});
-  }
-
-  const costCanvas=document.getElementById('o-cost-chart');
+  const datasets=[{label:'Mise cumulée',data:cumCosts,borderColor:'#e8a020',backgroundColor:'rgba(232,160,32,0.08)',borderWidth:2,pointRadius:0,fill:true,tension:0.1,order:1}];
+  if(maxCap!==null&&maxCap>0) datasets.push({label:'Capital max',data:Array(N).fill(maxCap),borderColor:'#c0392b',borderWidth:2,borderDash:[6,4],pointRadius:0,fill:false,order:0});
+  if(ruinRound!==null){ const rs=Array(N).fill(null); rs[ruinRound-1]=cumCosts[ruinRound-1]; datasets.push({label:'Ruine',data:rs,borderColor:'#c0392b',backgroundColor:'#c0392b',pointRadius:ctx=>ctx.dataIndex===ruinRound-1?7:0,pointStyle:'crossRot',showLine:false,order:-1}); }
   if(costChart){costChart.destroy();costChart=null;}
-  costChart=new Chart(costCanvas,{
-    type:'line',
-    data:{labels,datasets},
-    options:{
-      responsive:true,maintainAspectRatio:false,animation:{duration:200},
-      plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>'Tour '+ctx[0].label,label:ctx=>{if(ctx.dataset.label==='Capital max')return 'Capital max : '+ctx.raw.toFixed(2);if(ctx.dataset.label==='Ruine')return '⚠ Ruine ici';return 'Investi : '+ctx.raw.toFixed(3);}}}},
-      scales:{
-        x:{ticks:{color:'#606068',font:{size:10},maxTicksLimit:10},grid:{color:'#2a2a2d'}},
-        y:{ticks:{color:'#606068',font:{size:10}},grid:{color:'#2a2a2d'},border:{dash:[3,3]}}
-      }
-    }
-  });
+  costChart=new Chart(document.getElementById('o-cost-chart'),{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,animation:{duration:200},plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>'Tour '+ctx[0].label,label:ctx=>{if(ctx.dataset.label==='Capital max')return 'Capital max : '+ctx.raw.toFixed(2);if(ctx.dataset.label==='Ruine')return '⚠ Ruine ici';return 'Investi : '+ctx.raw.toFixed(3);}}}},scales:{x:{ticks:{color:'#606068',font:{size:10},maxTicksLimit:10},grid:{color:'#2a2a2d'}},y:{ticks:{color:'#606068',font:{size:10}},grid:{color:'#2a2a2d'},border:{dash:[3,3]}}}}});
 
   const ruinEl=document.getElementById('o-ruin-msg');
   if(ruinRound!==null){ ruinEl.style.color='#c0392b'; ruinEl.textContent='⚠ Capital épuisé au tour '+ruinRound; }
@@ -1312,9 +1222,6 @@ function renderOpt(){
   else ruinEl.textContent='';
 
   saveOptState();
-  // sync MC picked slider with o-nums
-  const mcPicked=document.getElementById('mc-picked');
-  if(mcPicked){ mcPicked.value=nums; document.getElementById('mc-picked-v').textContent=nums; }
   updateMC();
 }
 
@@ -1324,8 +1231,10 @@ updateHistory();
 updateRoundDisplay();
 updateHotNums();
 document.getElementById('ok-btn').onclick=submitTurn;
+// apply initial mode desc
+document.getElementById('mode-desc').textContent=getModeConfig().desc;
 loadState(applyState);
-loadOptState(s=>{ applyOptState(s); });
+loadOptState(s=>{ applyOptState(s); renderOpt(); });
 
 </script>
 </body>
